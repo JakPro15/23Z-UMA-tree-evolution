@@ -1,0 +1,5 @@
+Ewolucja drzewa
+
+Tworzenie drzewa decyzyjnego przy pomocy algorytmu ewolucyjnego. Zwykle klasyfikatory budowane są w oparciu o metodę zachłanną
+- w kolejnym kroku wybieramy lokalnie najlepszy podział. Takie podejście jest bardzo szybkie jednak nie zawsze prowadzi do
+utworzenia optymalnej struktury drzewa. Przed rozpoczęciem realizacji projektu proszę zapoznać się z zawartością strony.
