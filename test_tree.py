@@ -100,11 +100,13 @@ def test_print_full_tree():
         "[0]  [1]  [2]  [3]  [4]  [5]  [6]  [7] \n"
 
 
-def test_list_of_nodes():
+def test_subtree_nodes():
     leaf1 = LeafNode(1)
     leaf2 = LeafNode(0)
     leaf3 = LeafNode(1)
     inner = InnerNode(1, 2, children=(leaf2, leaf3))
     root = InnerNode(0, 4, children=(leaf1, inner))
     tree = DecisionTree(root)
-    assert tree.nodes == [root, leaf1, inner, leaf2, leaf3]
+    assert [node for node in tree.nodes()] == [root, leaf1, inner, leaf2, leaf3]
+    assert [node for node in root.subtree_nodes()] == [root, leaf1, inner, leaf2, leaf3]
+    assert [node for node in inner.subtree_nodes()] == [inner, leaf2, leaf3]

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Any, TYPE_CHECKING
+from typing import Callable, Any, TYPE_CHECKING, Self
 if TYPE_CHECKING:
     from _typeshed import SupportsWrite
 from abc import ABC, abstractmethod
@@ -7,17 +7,50 @@ from random import random, randint, choice, uniform
 from collections import deque
 
 
+class SubtreeIterator:
+    def __init__(self, root: Node) -> None:
+        self.iteration_queue = deque[Node]([root])
+
+    def __iter__(self) -> Self:
+        return self
+
+    def __next__(self) -> Node:
+        if len(self.iteration_queue) == 0:
+            raise StopIteration
+        node = self.iteration_queue.popleft()
+        if isinstance(node, InnerNode):
+            self.iteration_queue.append(node.children[0])
+            self.iteration_queue.append(node.children[1])
+        return node
+
+
 class Node(ABC):
+    parent: InnerNode | None
+
     @abstractmethod
     def predict(self, x: tuple[float, ...]) -> int:
         ...
 
+    def subtree_nodes(self) -> SubtreeIterator:
+        return SubtreeIterator(self)
+
+    def depth(self) -> int:
+        depth = 0
+        parent = self.parent
+        while parent is not None:
+            parent = parent.parent
+            depth += 1
+        return depth
+
 
 class InnerNode(Node):
-    def __init__(self, attribute: int, threshold: float, children: tuple[Node, Node]) -> None:
+    def __init__(self, attribute: int, threshold: float, children: tuple[Node, Node], parent: InnerNode | None = None) -> None:
         self.attribute = attribute
         self.threshold = threshold
         self.children = children
+        self.children[0].parent = self
+        self.children[1].parent = self
+        self.parent = parent
 
     def predict(self, x: tuple[float, ...]) -> Any:
         if x[self.attribute] < self.threshold:
@@ -27,46 +60,39 @@ class InnerNode(Node):
 
 
 class LeafNode(Node):
-    def __init__(self, leaf_class: int) -> None:
+    def __init__(self, leaf_class: int, parent: InnerNode | None = None) -> None:
         self.leaf_class = leaf_class
+        self.parent = parent
 
     def predict(self, x: tuple[float, ...]) -> Any:
         return self.leaf_class
 
 
-def _init_node(max_depth: int, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
-               leaf_probability: Callable[[int], float], depth: int = 0) -> Node:
+def init_node(max_depth: int, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
+              leaf_probability: Callable[[int], float], depth: int = 0, parent: InnerNode | None = None) -> Node:
     if depth >= max_depth or random() < leaf_probability(depth):
         return LeafNode(leaf_class=randint(0, no_classes - 1))
-    child_left = _init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1)
-    child_right = _init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1)
+    child_left = init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1)
+    child_right = init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1)
     if isinstance(child_left, LeafNode) and isinstance(child_right, LeafNode) \
        and child_left.leaf_class == child_right.leaf_class:
         available_classes = list(range(no_classes))
         available_classes.remove(child_right.leaf_class)
         child_right.leaf_class = choice(available_classes)
     split_attribute = randint(0, no_attributes - 1)
-    return InnerNode(attribute=split_attribute,
-                     threshold=uniform(*domains[split_attribute]),
-                     children=(child_left, child_right))
+    created_node = InnerNode(attribute=split_attribute,
+                             threshold=uniform(*domains[split_attribute]),
+                             children=(child_left, child_right),
+                             parent=parent)
+    return created_node
 
 
 class DecisionTree:
     def __init__(self, root: Node) -> None:
         self.root = root
-        self.nodes = self._get_nodes_list()
 
-    def _get_nodes_list(self) -> list[Node]:
-        nodes: list[Node] = []
-        to_check = deque[Node]()
-        to_check.append(self.root)
-        while len(to_check) > 0:
-            node = to_check.popleft()
-            if isinstance(node, InnerNode):
-                to_check.append(node.children[0])
-                to_check.append(node.children[1])
-            nodes.append(node)
-        return nodes
+    def nodes(self) -> SubtreeIterator:
+        return self.root.subtree_nodes()
 
     def predict(self, x: tuple[float, ...]) -> int:
         return self.root.predict(x)
@@ -74,7 +100,7 @@ class DecisionTree:
 
 def init_tree(max_depth: int, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
               leaf_probability: Callable[[int], float]) -> DecisionTree:
-    return DecisionTree(_init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, 0))
+    return DecisionTree(init_node(max_depth, no_attributes, domains, no_classes, leaf_probability))
 
 
 def _format_threshold(threshold: float) -> str:
@@ -95,7 +121,7 @@ def _format_node(node: Node | None, length: int, attribute_length: int, threshol
     return f'{result:^{length}}'
 
 
-def _get_tree_properties(root: Node) -> tuple[int, int, int, int]:
+def _get_tree_properties(tree: DecisionTree) -> tuple[int, int, int, int]:
     """
     Traverses the tree and returns tree properties for printing.
     """
@@ -103,13 +129,8 @@ def _get_tree_properties(root: Node) -> tuple[int, int, int, int]:
     max_attribute_length = 0
     max_threshold_length = 0
     tree_depth = 0
-    nodes = deque[tuple[Node | None, int]]()
-    nodes.append((root, 0))
-    while len(nodes) > 0:
-        node, depth = nodes.popleft()
+    for node in tree.nodes():
         if isinstance(node, InnerNode):
-            nodes.append((node.children[0], depth + 1))
-            nodes.append((node.children[1], depth + 1))
             attribute_length = len(str(node.attribute))
             if attribute_length > max_attribute_length:
                 max_attribute_length = attribute_length
@@ -117,6 +138,7 @@ def _get_tree_properties(root: Node) -> tuple[int, int, int, int]:
             if threshold_length > max_threshold_length:
                 max_threshold_length = threshold_length
         elif isinstance(node, LeafNode):
+            depth = node.depth()
             if depth > tree_depth:
                 tree_depth = depth
             class_length = len(str(node.leaf_class))
@@ -169,7 +191,7 @@ def print_tree(tree: DecisionTree, file: SupportsWrite[str] | None = None) -> No
     [1]    (1|2.00)
            [0]  [1]
     """
-    max_attribute_length, max_threshold_length, max_class_length, tree_depth = _get_tree_properties(tree.root)
+    max_attribute_length, max_threshold_length, max_class_length, tree_depth = _get_tree_properties(tree)
     leaf_length = _get_formatted_leaf_length(max_class_length, max_attribute_length, max_threshold_length)
 
     result = ""
