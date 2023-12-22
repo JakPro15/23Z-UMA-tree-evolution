@@ -124,10 +124,11 @@ def _format_tree_inner_layer(
     assert nodes_amount == 2 ** layer
     leaves_per_node = 2 ** (tree_depth - layer)
     nodes_in_next_layer: list[Node | None] = []
-    for node in nodes_in_layer:
+    for i, node in enumerate(nodes_in_layer):
         result += _format_node(node, leaves_per_node * (leaf_length + 1) - 1,
                                max_attribute_length, max_threshold_length, max_class_length)
-        result += ' '
+        if i < len(nodes_in_layer) - 1:
+            result += ' '
         if isinstance(node, InnerNode):
             nodes_in_next_layer.append(node.children[0])
             nodes_in_next_layer.append(node.children[1])
@@ -140,6 +141,16 @@ def _format_tree_inner_layer(
 
 
 def print_tree(tree: DecisionTree, file: SupportsWrite[str] | None = None) -> None:
+    """
+    Printed tree format is as follows:
+    inner node with attribute n and threshold m: (n|m)
+    threshold is printed with 2 decimal places
+    leaf node with class c: [c]
+    Example (from initial documentation pages 1-2; a_1 is attribute 0, a_2 is 1):
+      (0|4.00)
+    [1]    (1|2.00)
+           [0]  [1]
+    """
     max_attribute_length, max_threshold_length, max_class_length, tree_depth = _get_tree_properties(tree)
     leaf_length = _get_formatted_leaf_length(max_class_length, max_attribute_length, max_threshold_length)
 
@@ -152,7 +163,8 @@ def print_tree(tree: DecisionTree, file: SupportsWrite[str] | None = None) -> No
         )
         result += formatted_layer
 
-    for node in nodes_in_layer:
+    for i, node in enumerate(nodes_in_layer):
         result += _format_node(node, leaf_length, max_attribute_length, max_threshold_length, max_class_length)
-        result += ' '
+        if i < len(nodes_in_layer) - 1:
+            result += ' '
     print(result, file=file)
