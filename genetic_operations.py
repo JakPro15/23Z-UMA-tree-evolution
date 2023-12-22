@@ -41,8 +41,10 @@ def _get_random_max_element_index(collection: list[Any]) -> int:
     ])
 
 def _do_leaf_inner_swap(tree: DecisionTree, node: Node, no_attributes: int,
-                        domains: list[tuple[float, float]], no_classes: int) -> None:
+                        domains: list[tuple[float, float]], no_classes: int, max_depth: int) -> None:
     if isinstance(node, LeafNode):
+        if node.depth() >= max_depth:
+            return
         new_node = init_node(1, no_attributes, domains, no_classes, leaf_probability=lambda _: 0, parent=node.parent)
         _replace_child(tree, node, new_node)
     else:
@@ -57,11 +59,14 @@ def _do_leaf_inner_swap(tree: DecisionTree, node: Node, no_attributes: int,
 
 
 def mutate_tree(tree: DecisionTree, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
-                mutation_probability: float, leaf_inner_swap_probability: float) -> None:
+                mutation_probability: float, leaf_inner_swap_probability: float, max_depth: int) -> None:
     if not random() < mutation_probability:
         return
     mutated_node = choice(list(tree.nodes()))
     if random() < leaf_inner_swap_probability:
-        _do_leaf_inner_swap(tree, mutated_node, no_attributes, domains, no_classes)
+        _do_leaf_inner_swap(tree, mutated_node, no_attributes, domains, no_classes, max_depth)
     else:
         _do_no_swap_mutation(tree, mutated_node, no_attributes, domains, no_classes)
+
+
+# def crossover_trees(tree1: DecisionTree, tree2: DecisionTree, max_depth: int)
