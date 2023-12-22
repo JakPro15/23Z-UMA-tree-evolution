@@ -1,4 +1,4 @@
-from tree import LeafNode, InnerNode, print_tree
+from tree import LeafNode, InnerNode, DecisionTree, print_tree
 from io import StringIO
 
 
@@ -10,9 +10,10 @@ def test_prediction():
     leaf3 = LeafNode(1)
     inner = InnerNode(1, 2, children=(leaf2, leaf3))
     root = InnerNode(0, 4, children=(leaf1, inner))
-    assert root.predict((2, 3)) == 1
-    assert root.predict((5, 1)) == 0
-    assert root.predict((4, 2)) == 1
+    tree = DecisionTree(root)
+    assert tree.predict((2, 3)) == 1
+    assert tree.predict((5, 1)) == 0
+    assert tree.predict((4, 2)) == 1
 
 
 def test_leaf_trees():
@@ -47,14 +48,15 @@ def test_full_tree():
     inner2_1 = InnerNode(1, 2, children=(inner3_1, inner3_2))
     inner2_2 = InnerNode(1, 2, children=(inner3_3, inner3_4))
     root = InnerNode(0, 2, children=(inner2_1, inner2_2))
-    assert root.predict((1, 1, 1)) == 0
-    assert root.predict((1, 1, 3)) == 1
-    assert root.predict((1, 3, 1)) == 2
-    assert root.predict((1, 3, 3)) == 3
-    assert root.predict((3, 1, 1)) == 4
-    assert root.predict((3, 1, 3)) == 5
-    assert root.predict((3, 3, 1)) == 6
-    assert root.predict((3, 3, 3)) == 7
+    tree = DecisionTree(root)
+    assert tree.predict((1, 1, 1)) == 0
+    assert tree.predict((1, 1, 3)) == 1
+    assert tree.predict((1, 3, 1)) == 2
+    assert tree.predict((1, 3, 3)) == 3
+    assert tree.predict((3, 1, 1)) == 4
+    assert tree.predict((3, 1, 3)) == 5
+    assert tree.predict((3, 3, 1)) == 6
+    assert tree.predict((3, 3, 3)) == 7
 
 
 def test_print_tree():
@@ -64,7 +66,8 @@ def test_print_tree():
     inner = InnerNode(1, 2, children=(leaf2, leaf3))
     root = InnerNode(0, 4, children=(leaf1, inner))
     stream = StringIO()
-    print_tree(root, file=stream)
+    tree = DecisionTree(root)
+    print_tree(tree, file=stream)
     assert stream.getvalue() == \
         "     (0|4.00)      \n" + \
         "   [1]    (1|2.00) \n" + \
@@ -87,10 +90,21 @@ def test_print_full_tree():
     inner2_1 = InnerNode(1, 2, children=(inner3_1, inner3_2))
     inner2_2 = InnerNode(1, 2, children=(inner3_3, inner3_4))
     root = InnerNode(0, 2, children=(inner2_1, inner2_2))
+    tree = DecisionTree(root)
     stream = StringIO()
-    print_tree(root, file=stream)
+    print_tree(tree, file=stream)
     assert stream.getvalue() == \
         "               (0|2.00)                \n" + \
         "     (1|2.00)            (1|2.00)      \n" + \
         "(2|2.00)  (2|2.00)  (2|2.00)  (2|2.00) \n" + \
         "[0]  [1]  [2]  [3]  [4]  [5]  [6]  [7] \n"
+
+
+def test_list_of_nodes():
+    leaf1 = LeafNode(1)
+    leaf2 = LeafNode(0)
+    leaf3 = LeafNode(1)
+    inner = InnerNode(1, 2, children=(leaf2, leaf3))
+    root = InnerNode(0, 4, children=(leaf1, inner))
+    tree = DecisionTree(root)
+    assert tree.nodes == [root, leaf1, inner, leaf2, leaf3]
