@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import Callable, Iterable, Any, TypeAlias
+from typing import Callable, Any, TypeAlias, TYPE_CHECKING
+if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
 from abc import ABC, abstractmethod
 from random import random, randint, choice, uniform
 from collections import deque
@@ -7,7 +9,7 @@ from collections import deque
 
 class Node(ABC):
     @abstractmethod
-    def predict(self, x: tuple[float]) -> int:
+    def predict(self, x: tuple[float, ...]) -> int:
         ...
 
 
@@ -17,7 +19,7 @@ class InnerNode(Node):
         self.threshold = threshold
         self.children = children
 
-    def predict(self, x: tuple[float]) -> Any:
+    def predict(self, x: tuple[float, ...]) -> Any:
         if x[self.attribute] < self.threshold:
             return self.children[0].predict(x)
         else:
@@ -28,7 +30,7 @@ class LeafNode(Node):
     def __init__(self, leaf_class: int) -> None:
         self.leaf_class = leaf_class
 
-    def predict(self, x: tuple[float]) -> Any:
+    def predict(self, x: tuple[float, ...]) -> Any:
         return self.leaf_class
 
 
@@ -64,22 +66,26 @@ def _format_threshold(threshold: float) -> str:
     return formatted
 
 
-def _format_node(node: Node, length: int, attribute_length: int, threshold_length: int, class_length: int) -> str:
+def _format_node(node: Node | None, length: int, attribute_length: int, threshold_length: int, class_length: int) -> str:
+    result = ""
     if node is None:
         return ' ' * length
     elif isinstance(node, InnerNode):
         result = f'({node.attribute:>{attribute_length}}|{_format_threshold(node.threshold):<{threshold_length}})'
-    else:
+    elif isinstance(node, LeafNode):
         result = f'[{node.leaf_class:>{class_length}}]'
     return f'{result:^{length}}'
 
 
-def print_tree(tree: DecisionTree) -> None:
+def _get_tree_properties(tree: DecisionTree) -> tuple[int, int, int, int]:
+    """
+    Traverses the tree and returns tree properties for printing.
+    """
     max_class_length = 0
     max_attribute_length = 0
     max_threshold_length = 0
     tree_depth = 0
-    nodes = deque()
+    nodes = deque[tuple[Node | None, int]]()
     nodes.append((tree, 0))
     while len(nodes) > 0:
         node, depth = nodes.popleft()
@@ -92,37 +98,61 @@ def print_tree(tree: DecisionTree) -> None:
             threshold_length = len(_format_threshold(node.threshold))
             if threshold_length > max_threshold_length:
                 max_threshold_length = threshold_length
-        else:
+        elif isinstance(node, LeafNode):
             if depth > tree_depth:
                 tree_depth = depth
             class_length = len(str(node.leaf_class))
             if class_length > max_class_length:
                 max_class_length = class_length
+    return max_attribute_length, max_threshold_length, max_class_length, tree_depth
+
+
+def _get_formatted_leaf_length(max_class_length: int, max_attribute_length: int, max_threshold_length: int) -> int:
     leaf_length = max_class_length + 2
     inner_length = max_attribute_length + max_threshold_length + 3
     while inner_length > 2 * leaf_length + 1:
         leaf_length += 1
+    return leaf_length
+
+
+def _format_tree_inner_layer(
+    layer: int, nodes_in_layer: list[Node | None], tree_depth: int, leaf_length: int,
+    max_attribute_length: int, max_threshold_length: int, max_class_length: int
+) -> tuple[str, list[Node | None]]:
+    result = ""
+    nodes_amount = len(nodes_in_layer)
+    assert nodes_amount == 2 ** layer
+    leaves_per_node = 2 ** (tree_depth - layer)
+    nodes_in_next_layer: list[Node | None] = []
+    for node in nodes_in_layer:
+        result += _format_node(node, leaves_per_node * (leaf_length + 1) - 1,
+                               max_attribute_length, max_threshold_length, max_class_length)
+        result += ' '
+        if isinstance(node, InnerNode):
+            nodes_in_next_layer.append(node.children[0])
+            nodes_in_next_layer.append(node.children[1])
+        else:
+            nodes_in_next_layer.append(None)
+            nodes_in_next_layer.append(None)
+    nodes_in_layer = nodes_in_next_layer
+    result += '\n'
+    return result, nodes_in_next_layer
+
+
+def print_tree(tree: DecisionTree, file: SupportsWrite[str] | None = None) -> None:
+    max_attribute_length, max_threshold_length, max_class_length, tree_depth = _get_tree_properties(tree)
+    leaf_length = _get_formatted_leaf_length(max_class_length, max_attribute_length, max_threshold_length)
 
     result = ""
-    nodes_in_layer = [tree]
+    nodes_in_layer: list[Node | None] = [tree]
     for layer in range(tree_depth):
-        nodes_amount = len(nodes_in_layer)
-        assert nodes_amount == 2 ** layer
-        leaves_per_node = 2 ** (tree_depth - layer)
-        nodes_in_next_layer = []
-        for node in nodes_in_layer:
-            result += _format_node(node, leaves_per_node * (leaf_length + 1) - 1, max_attribute_length, max_threshold_length, max_class_length)
-            result += ' '
-            if isinstance(node, InnerNode):
-                nodes_in_next_layer.append(node.children[0])
-                nodes_in_next_layer.append(node.children[1])
-            else:
-                nodes_in_next_layer.append(None)
-                nodes_in_next_layer.append(None)
-        nodes_in_layer = nodes_in_next_layer
-        result += '\n'
+        formatted_layer, nodes_in_layer = _format_tree_inner_layer(
+            layer, nodes_in_layer, tree_depth, leaf_length,
+            max_attribute_length, max_threshold_length, max_class_length
+        )
+        result += formatted_layer
 
     for node in nodes_in_layer:
         result += _format_node(node, leaf_length, max_attribute_length, max_threshold_length, max_class_length)
         result += ' '
-    print(result)
+    print(result, file=file)
