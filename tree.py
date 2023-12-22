@@ -104,6 +104,15 @@ class DecisionTree:
     def nodes(self) -> SubtreeIterator:
         return self.root.subtree_nodes()
 
+    def depth(self) -> int:
+        depth = 0
+        for node in self.nodes():
+            if isinstance(node, LeafNode):
+                node_depth = node.depth()
+                if node_depth > depth:
+                    depth = node_depth
+        return depth
+
     def predict(self, x: tuple[float, ...]) -> int:
         return self.root.predict(x)
 
