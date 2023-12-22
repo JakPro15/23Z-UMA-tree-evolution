@@ -42,6 +42,10 @@ class Node(ABC):
             depth += 1
         return depth
 
+    @abstractmethod
+    def copy(self) -> Node:
+        ...
+
 
 class InnerNode(Node):
     def __init__(self, attribute: int, threshold: float, children: tuple[Node, Node], parent: InnerNode | None = None) -> None:
@@ -58,6 +62,9 @@ class InnerNode(Node):
         else:
             return self.children[1].predict(x)
 
+    def copy(self) -> InnerNode:
+        return InnerNode(self.attribute, self.threshold, (self.children[0].copy(), self.children[1].copy()), self.parent)
+
 
 class LeafNode(Node):
     def __init__(self, leaf_class: int, parent: InnerNode | None = None) -> None:
@@ -66,6 +73,9 @@ class LeafNode(Node):
 
     def predict(self, x: tuple[float, ...]) -> Any:
         return self.leaf_class
+
+    def copy(self) -> LeafNode:
+        return LeafNode(self.leaf_class, self.parent)
 
 
 def init_node(max_depth: int, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
@@ -96,6 +106,9 @@ class DecisionTree:
 
     def predict(self, x: tuple[float, ...]) -> int:
         return self.root.predict(x)
+
+    def copy(self) -> DecisionTree:
+        return DecisionTree(self.root.copy())
 
 
 def init_tree(max_depth: int, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
