@@ -1,6 +1,6 @@
 from tree import DecisionTree, Node, InnerNode, LeafNode, init_node
 from typing import Any
-from random import random, choice, uniform
+from random import random, choice, uniform, shuffle
 
 
 def _replace_child(tree: DecisionTree, parent: InnerNode | None, old_child: Node, new_child: Node) -> None:
@@ -61,6 +61,9 @@ def _do_leaf_inner_swap(tree: DecisionTree, node: Node, no_attributes: int,
 
 def mutate_tree(tree: DecisionTree, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
                 mutation_probability: float, leaf_inner_swap_probability: float, max_depth: int) -> None:
+    """
+    Mutation is done in-place - the given trees are modified.
+    """
     if not random() < mutation_probability:
         return
     mutated_node = choice(list(tree.nodes()))
@@ -90,6 +93,9 @@ def _check_max_depth(parent1: DecisionTree, parent2: DecisionTree, child1: Decis
 
 
 def crossover_trees(parent1: DecisionTree, parent2: DecisionTree, crossover_probability: float, max_depth: int) -> tuple[DecisionTree, DecisionTree]:
+    """
+    Given parents are not modified; the results are always copies of the originals.
+    """
     if not random() < crossover_probability:
         return (parent1.copy(), parent2.copy())
     child1 = parent1.copy()
@@ -98,3 +104,24 @@ def crossover_trees(parent1: DecisionTree, parent2: DecisionTree, crossover_prob
     swapped_root2 = choice(list(child2.nodes()))
     _do_crossover_swap(child1, child2, swapped_root1, swapped_root2)
     return _check_max_depth(parent1, parent2, child1, child2, max_depth)
+
+
+def do_mutation(population: list[DecisionTree], no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
+                mutation_probability: float, leaf_inner_swap_probability: float, max_depth: int) -> list[DecisionTree]:
+    mutated_population = [tree.copy() for tree in population]
+    for tree in mutated_population:
+        mutate_tree(tree, no_attributes, domains, no_classes, mutation_probability, leaf_inner_swap_probability, max_depth)
+    return mutated_population
+
+
+def do_crossover(population: list[DecisionTree], crossover_probability: float, max_depth: int) -> list[DecisionTree]:
+    shuffled_population = population.copy()
+    shuffle(shuffled_population)
+    result: list[DecisionTree] = []
+    for i in range(len(shuffled_population) // 2):
+        crossed_over = crossover_trees(shuffled_population[2 * i], shuffled_population[2 * i + 1], crossover_probability, max_depth)
+        result.append(crossed_over[0])
+        result.append(crossed_over[1])
+    if len(shuffled_population) % 2 == 1:
+        result.append(shuffled_population[-1])
+    return result
