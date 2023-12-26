@@ -110,3 +110,50 @@ def test_subtree_nodes():
     assert [node for node in tree.nodes()] == [root, leaf1, inner, leaf2, leaf3]
     assert [node for node in root.subtree_nodes()] == [root, leaf1, inner, leaf2, leaf3]
     assert [node for node in inner.subtree_nodes()] == [inner, leaf2, leaf3]
+
+
+def test_depth():
+    leaf1 = LeafNode(1)
+    leaf2 = LeafNode(0)
+    leaf3 = LeafNode(1)
+    inner = InnerNode(1, 2, children=(leaf2, leaf3))
+    root = InnerNode(0, 4, children=(leaf1, inner))
+    tree = DecisionTree(root)
+    assert root.depth() == 0
+    assert leaf1.depth() == 1
+    assert inner.depth() == 1
+    assert leaf2.depth() == 2
+    assert leaf3.depth() == 2
+    assert tree.depth() == 2
+
+
+def test_copy():
+    leaf1 = LeafNode(1)
+    leaf2 = LeafNode(0)
+    leaf3 = LeafNode(1)
+    inner = InnerNode(1, 2, children=(leaf2, leaf3))
+    root = InnerNode(0, 4, children=(leaf1, inner))
+    tree = DecisionTree(root)
+    copied = tree.copy()
+    assert tree != copied
+    assert tree.root != copied.root
+    assert isinstance(copied.root, InnerNode)
+    assert copied.root.attribute == 0
+    assert copied.root.threshold == 4
+
+    assert leaf1 != copied.root.children[0]
+    assert isinstance(copied.root.children[0], LeafNode)
+    assert copied.root.children[0].leaf_class == 1
+
+    assert inner != copied.root.children[1]
+    assert isinstance(copied.root.children[1], InnerNode)
+    assert copied.root.children[1].attribute == 1
+    assert copied.root.children[1].threshold == 2
+
+    assert leaf2 != copied.root.children[1].children[0]
+    assert isinstance(copied.root.children[1].children[0], LeafNode)
+    assert copied.root.children[1].children[0].leaf_class == 0
+
+    assert leaf3 != copied.root.children[1].children[1]
+    assert isinstance(copied.root.children[1].children[1], LeafNode)
+    assert copied.root.children[1].children[1].leaf_class == 1

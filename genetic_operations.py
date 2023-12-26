@@ -3,19 +3,20 @@ from typing import Any
 from random import random, choice, uniform
 
 
-def _replace_child(tree: DecisionTree, old_parent: InnerNode | None, old_child: Node, new_child: Node) -> None:
-    new_child.parent = old_parent
-    if old_parent is not None:
-        if old_parent.children[0] == old_child:
-            old_parent.children = (new_child, old_parent.children[1])
+def _replace_child(tree: DecisionTree, parent: InnerNode | None, old_child: Node, new_child: Node) -> None:
+    new_child.parent = parent
+    if parent is not None:
+        if parent.children[0] == old_child:
+            parent.children = (new_child, parent.children[1])
         else:
-            old_parent.children = (old_parent.children[0], new_child)
+            parent.children = (parent.children[0], new_child)
     else:
         tree.root = new_child
 
 
 def _attempt_rollup(tree: DecisionTree, node: InnerNode) -> None:
-    if isinstance(node.children[0], LeafNode) and isinstance(node.children[1], LeafNode) and node.children[0].leaf_class == node.children[1].leaf_class:
+    if isinstance(node.children[0], LeafNode) and isinstance(node.children[1], LeafNode) and \
+            node.children[0].leaf_class == node.children[1].leaf_class:
         new_node = LeafNode(node.children[0].leaf_class)
         _replace_child(tree, node.parent, node, new_node)
 
@@ -69,13 +70,7 @@ def mutate_tree(tree: DecisionTree, no_attributes: int, domains: list[tuple[floa
         _do_no_swap_mutation(tree, mutated_node, no_attributes, domains, no_classes)
 
 
-def crossover_trees(parent1: DecisionTree, parent2: DecisionTree, crossover_probability: float, max_depth: int) -> tuple[DecisionTree, DecisionTree]:
-    if not random() < crossover_probability:
-        return (parent1.copy(), parent2.copy())
-    child1 = parent1.copy()
-    child2 = parent2.copy()
-    swapped_root1 = choice(list(child1.nodes()))
-    swapped_root2 = choice(list(child2.nodes()))
+def _do_crossover_swap(child1: DecisionTree, child2: DecisionTree, swapped_root1: Node, swapped_root2: Node) -> None:
     swapped_parent1 = swapped_root1.parent
     swapped_parent2 = swapped_root2.parent
     _replace_child(child1, swapped_parent1, swapped_root1, swapped_root2)
@@ -84,8 +79,22 @@ def crossover_trees(parent1: DecisionTree, parent2: DecisionTree, crossover_prob
         _attempt_rollup(child1, swapped_parent1)
     if isinstance(swapped_root1, LeafNode) and swapped_parent2 is not None:
         _attempt_rollup(child2, swapped_parent2)
+
+
+def _check_max_depth(parent1: DecisionTree, parent2: DecisionTree, child1: DecisionTree, child2: DecisionTree, max_depth: int) -> tuple[DecisionTree, DecisionTree]:
     if child1.depth() > max_depth:
         child1 = parent1.copy()
     if child2.depth() > max_depth:
         child2 = parent2.copy()
     return (child1, child2)
+
+
+def crossover_trees(parent1: DecisionTree, parent2: DecisionTree, crossover_probability: float, max_depth: int) -> tuple[DecisionTree, DecisionTree]:
+    if not random() < crossover_probability:
+        return (parent1.copy(), parent2.copy())
+    child1 = parent1.copy()
+    child2 = parent2.copy()
+    swapped_root1 = choice(list(child1.nodes()))
+    swapped_root2 = choice(list(child2.nodes()))
+    _do_crossover_swap(child1, child2, swapped_root1, swapped_root2)
+    return _check_max_depth(parent1, parent2, child1, child2, max_depth)
