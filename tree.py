@@ -82,8 +82,10 @@ def init_node(max_depth: int, no_attributes: int, domains: list[tuple[float, flo
               leaf_probability: Callable[[int], float], depth: int = 0, parent: InnerNode | None = None) -> Node:
     if depth >= max_depth or random() < leaf_probability(depth):
         return LeafNode(leaf_class=randint(0, no_classes - 1))
-    child_left = init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1)
-    child_right = init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1)
+    child_left = init_node(max_depth, no_attributes,
+                           domains, no_classes, leaf_probability, depth + 1)
+    child_right = init_node(max_depth, no_attributes,
+                            domains, no_classes, leaf_probability, depth + 1)
     if isinstance(child_left, LeafNode) and isinstance(child_right, LeafNode) \
        and child_left.leaf_class == child_right.leaf_class:
         available_classes = list(range(no_classes))
@@ -137,7 +139,8 @@ def _format_node(node: Node | None, length: int, attribute_length: int, threshol
     if node is None:
         return ' ' * length
     elif isinstance(node, InnerNode):
-        result = f'({node.attribute:>{attribute_length}}|{_format_threshold(node.threshold):<{threshold_length}})'
+        result = f'({node.attribute:>{attribute_length}}|' \
+            f'{_format_threshold(node.threshold):<{threshold_length}})'
     elif isinstance(node, LeafNode):
         result = f'[{node.leaf_class:>{class_length}}]'
     return f'{result:^{length}}'
@@ -213,8 +216,10 @@ def print_tree(tree: DecisionTree, file: SupportsWrite[str] | None = None) -> No
     [1]    (1|2.00)
            [0]  [1]
     """
-    max_attribute_length, max_threshold_length, max_class_length, tree_depth = _get_tree_properties(tree)
-    leaf_length = _get_formatted_leaf_length(max_class_length, max_attribute_length, max_threshold_length)
+    max_attribute_length, max_threshold_length, max_class_length, tree_depth = _get_tree_properties(
+        tree)
+    leaf_length = _get_formatted_leaf_length(
+        max_class_length, max_attribute_length, max_threshold_length)
 
     result = ""
     nodes_in_layer: list[Node | None] = [tree.root]
@@ -226,7 +231,8 @@ def print_tree(tree: DecisionTree, file: SupportsWrite[str] | None = None) -> No
         result += formatted_layer
 
     for i, node in enumerate(nodes_in_layer):
-        result += _format_node(node, leaf_length, max_attribute_length, max_threshold_length, max_class_length)
+        result += _format_node(node, leaf_length, max_attribute_length,
+                               max_threshold_length, max_class_length)
         if i < len(nodes_in_layer) - 1:
             result += ' '
     print(result, file=file)
