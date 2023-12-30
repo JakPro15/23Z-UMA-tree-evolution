@@ -11,14 +11,20 @@ def proportional_reproduction(population: list[DecisionTree], fitnesses: list[fl
     return choices(population, fitnesses, k=len(population))
 
 
+def get_k_from_a(a: float, population_size: int) -> float:
+    return (2 - 2 * a * population_size) / (population_size - 1)
+
+
 def rank_reproduction(population: list[DecisionTree], fitnesses: list[float], a: float, k: float) -> list[DecisionTree]:
     """
     Fitness values should be maximized.
     Trees are not copied; resulting list may contain the same trees as in original list.
     """
-    sorted_indices = sorted(range(len(population)), key=lambda i: fitnesses[i], reverse=True)
+    sorted_indices = sorted(range(len(population)),
+                            key=lambda i: fitnesses[i], reverse=True)
     sorted_population = [population[i] for i in sorted_indices]
-    weights = [a + k * (1 - rank / len(population)) for rank in range(len(population))]
+    weights = [a + k * (1 - rank / len(population))
+               for rank in range(len(population))]
     return choices(sorted_population, weights, k=len(population))
 
 
@@ -27,8 +33,10 @@ def truncation_reproduction(population: list[DecisionTree], fitnesses: list[floa
     Fitness values should be maximized.
     Trees are not copied; resulting list may contain the same trees as in original list.
     """
-    sorted_indices = sorted(range(len(population)), key=lambda i: fitnesses[i], reverse=True)
-    truncated_population = [population[i] for i in sorted_indices[:floor(rho * len(population)) + 1]]
+    sorted_indices = sorted(range(len(population)),
+                            key=lambda i: fitnesses[i], reverse=True)
+    truncated_population = [population[i]
+                            for i in sorted_indices[:floor(rho * len(population)) + 1]]
     return choices(truncated_population, k=len(population))
 
 

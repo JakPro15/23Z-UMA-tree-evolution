@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Callable, Any, TYPE_CHECKING, Self
+from typing import Callable, Any, TYPE_CHECKING
+from typing_extensions import Self
 if TYPE_CHECKING:
     from _typeshed import SupportsWrite
 from abc import ABC, abstractmethod
