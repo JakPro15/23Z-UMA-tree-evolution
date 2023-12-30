@@ -1,19 +1,15 @@
 from tree import init_tree, DecisionTree, print_tree
-from typing import Callable, Any
+from typing import Callable, Any, Union
 from genetic_operations import do_mutation, do_crossover
 import pandas as pd
+from sklearn.metrics import accuracy_score
 
 
-def accuracy(x: pd.DataFrame, y: pd.Series, tree: DecisionTree) -> float:
+def _accuracy(x: pd.DataFrame, y: pd.Series, tree: DecisionTree) -> float:
     predictions = [tree.predict(tuple(row[1:]))  # type: ignore
                    for row in x.itertuples()]  # type: ignore
 
-    sum = 0
-    for i, y_val in enumerate(y.tolist()):
-        if y_val == predictions[i]:
-            sum += 1
-
-    return sum / len(predictions)
+    return float(accuracy_score(y, predictions))
 
 
 class TreeNotConstructedYetException(Exception):
@@ -43,7 +39,7 @@ class EvoTree:
         self.no_classes: int = 0
         self.map_dict: dict[Any, int] = {}
         self.unmap_dict: dict[int, Any] = {}
-        self.tree: DecisionTree | None = None
+        self.tree: Union[DecisionTree, None] = None
 
     def _init_population(self) -> list[DecisionTree]:
         return [
@@ -70,7 +66,7 @@ class EvoTree:
         candidate_scores = []
 
         population = self._init_population()
-        scores = [accuracy(x, y_mapped, tree) for tree in population]
+        scores = [_accuracy(x, y_mapped, tree) for tree in population]
 
         best_score = max(scores)
         best_tree = population[scores.index(best_score)]
@@ -91,7 +87,7 @@ class EvoTree:
                 self.crossover_probability, self.max_depth)
 
             genetic_operations_scores = [
-                accuracy(x, y_mapped, tree) for tree in genetic_operations_population]
+                _accuracy(x, y_mapped, tree) for tree in genetic_operations_population]
 
             candidate_score = max(genetic_operations_scores)
             candidate_tree = genetic_operations_population[genetic_operations_scores.index(
@@ -120,8 +116,8 @@ class EvoTree:
     def predict(self, x: pd.DataFrame) -> pd.Series:
         if (self.tree is None):
             raise TreeNotConstructedYetException()
-        predictions = [self.tree.predict(tuple(row))  # type: ignore
-                       for row in x.iterrows()]  # type: ignore
+        predictions = [self.tree.predict(tuple(row[1:]))  # type: ignore
+                       for row in x.itertuples()]  # type: ignore
 
         return pd.Series([self.unmap_dict[prediction] for prediction in predictions])
 
