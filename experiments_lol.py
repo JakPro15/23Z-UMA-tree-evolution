@@ -46,12 +46,12 @@ try:
 except Exception:
     file_length = 0
 
-for seed_nr in range(25):
-    for max_depth in [5, 10, 20]:
+for seed_nr in range(13):
+    for max_depth in [5, 20]:
         for j, reproduction in enumerate(reproductions):
-            for mutation_probability in [0, 0.4, 0.8]:
+            for mutation_probability in [0.4, 0.8]:
                 for leaf_inner_swap_probabilty in [0, 0.3]:
-                    for crossover_probability in [0, 0.4, 0.8]:
+                    for crossover_probability in [0, 0.4]:
                         for k, succesion in enumerate(succesions):
 
                             counter += 1
