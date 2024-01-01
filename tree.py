@@ -1,11 +1,13 @@
 from __future__ import annotations
-from typing import Callable, Any, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, overload
 from typing_extensions import Self
 if TYPE_CHECKING:
     from _typeshed import SupportsWrite
 from abc import ABC, abstractmethod
 from random import random, randint, choice, uniform
 from collections import deque
+import pandas as pd
+import numpy as np
 
 
 class SubtreeIterator:
@@ -29,7 +31,17 @@ class Node(ABC):
     parent: InnerNode | None
 
     @abstractmethod
+    @overload
     def predict(self, x: tuple[float, ...]) -> int:
+        ...
+
+    @abstractmethod
+    @overload
+    def predict(self, x: pd.DataFrame) -> pd.Series[int]:
+        ...
+
+    @abstractmethod
+    def predict(self, x: tuple[float, ...] | pd.DataFrame) -> int | pd.Series[int]:
         ...
 
     def subtree_nodes(self) -> SubtreeIterator:
@@ -57,7 +69,18 @@ class InnerNode(Node):
         self.children[1].parent = self
         self.parent = parent
 
-    def predict(self, x: tuple[float, ...]) -> Any:
+    @overload
+    def predict(self, x: tuple[float, ...]) -> int:
+        ...
+
+    @overload
+    def predict(self, x: pd.DataFrame) -> pd.Series[int]:
+        ...
+
+    def predict(self, x: tuple[float, ...] | pd.DataFrame) -> int | pd.Series[int]:
+        if isinstance(x, pd.DataFrame):
+            mask = x.iloc[:, self.attribute] < self.threshold
+            return pd.concat([self.children[0].predict(x[mask]), self.children[1].predict(x[~mask])], ignore_index=True) # type: ignore
         if x[self.attribute] < self.threshold:
             return self.children[0].predict(x)
         else:
@@ -72,7 +95,17 @@ class LeafNode(Node):
         self.leaf_class = leaf_class
         self.parent = parent
 
-    def predict(self, x: tuple[float, ...]) -> Any:
+    @overload
+    def predict(self, x: tuple[float, ...]) -> int:
+        ...
+
+    @overload
+    def predict(self, x: pd.DataFrame) -> pd.Series[int]:
+        ...
+
+    def predict(self, x: tuple[float, ...] | pd.DataFrame) -> int | pd.Series[int]:
+        if isinstance(x, pd.DataFrame):
+            return pd.Series(self.leaf_class, index=np.arange(len(x)))
         return self.leaf_class
 
     def copy(self) -> LeafNode:
@@ -80,21 +113,29 @@ class LeafNode(Node):
 
 
 def init_node(max_depth: int, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
-              leaf_probability: Callable[[int], float], depth: int = 0, parent: InnerNode | None = None) -> Node:
+              leaf_probability: Callable[[int], float], depth: int, X_train: pd.DataFrame, y_train: pd.Series[int],
+              parent: InnerNode | None = None) -> Node:
     if depth >= max_depth or random() < leaf_probability(depth):
-        return LeafNode(leaf_class=randint(0, no_classes - 1))
-    child_left = init_node(max_depth, no_attributes,
-                           domains, no_classes, leaf_probability, depth + 1)
-    child_right = init_node(max_depth, no_attributes,
-                            domains, no_classes, leaf_probability, depth + 1)
+        if len(y_train) > 0:
+            return LeafNode(leaf_class=y_train.mode().iloc[0])
+        else:
+            return LeafNode(leaf_class=randint(0, no_classes - 1))
+    split_attribute = randint(0, no_attributes - 1)
+    split_threshold = uniform(*domains[split_attribute])
+    if len(X_train) > 0:
+        mask = X_train.iloc[:, split_attribute] < split_threshold
+        child_left = init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1, X_train[mask], y_train[mask])
+        child_right = init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1, X_train[~mask], y_train[~mask])
+    else:
+        child_left = init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1, X_train, y_train)
+        child_right = init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, depth + 1, X_train, y_train)
     if isinstance(child_left, LeafNode) and isinstance(child_right, LeafNode) \
        and child_left.leaf_class == child_right.leaf_class:
         available_classes = list(range(no_classes))
         available_classes.remove(child_right.leaf_class)
         child_right.leaf_class = choice(available_classes)
-    split_attribute = randint(0, no_attributes - 1)
     created_node = InnerNode(attribute=split_attribute,
-                             threshold=uniform(*domains[split_attribute]),
+                             threshold=split_threshold,
                              children=(child_left, child_right),
                              parent=parent)
     return created_node
@@ -116,7 +157,15 @@ class DecisionTree:
                     depth = node_depth
         return depth
 
+    @overload
     def predict(self, x: tuple[float, ...]) -> int:
+        ...
+
+    @overload
+    def predict(self, x: pd.DataFrame) -> pd.Series[int]:
+        ...
+
+    def predict(self, x: tuple[float, ...] | pd.DataFrame) -> int | pd.Series[int]:
         return self.root.predict(x)
 
     def copy(self) -> DecisionTree:
@@ -124,8 +173,8 @@ class DecisionTree:
 
 
 def init_tree(max_depth: int, no_attributes: int, domains: list[tuple[float, float]], no_classes: int,
-              leaf_probability: Callable[[int], float]) -> DecisionTree:
-    return DecisionTree(init_node(max_depth, no_attributes, domains, no_classes, leaf_probability))
+              leaf_probability: Callable[[int], float], X_train: pd.DataFrame, y_train: pd.Series[int]) -> DecisionTree:
+    return DecisionTree(init_node(max_depth, no_attributes, domains, no_classes, leaf_probability, 0, X_train, y_train))
 
 
 def _format_threshold(threshold: float) -> str:

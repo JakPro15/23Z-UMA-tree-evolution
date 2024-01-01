@@ -116,10 +116,11 @@ class EvoTree:
     def predict(self, x: pd.DataFrame) -> pd.Series:
         if (self.tree is None):
             raise TreeNotConstructedYetException()
-        predictions = [self.tree.predict(tuple(row[1:]))  # type: ignore
-                       for row in x.itertuples()]  # type: ignore
+        predictions = self.tree.predict(x)
+        # predictions = [self.tree.predict(tuple(row[1:]))  # type: ignore
+        #                for row in x.itertuples()]  # type: ignore
 
-        return pd.Series([self.unmap_dict[prediction] for prediction in predictions])
+        return predictions.apply(lambda y: self.unmap_dict[y]) # type: ignore
 
     def print_tree(self) -> None:
         if (self.tree is None):
