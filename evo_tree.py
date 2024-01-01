@@ -6,9 +6,7 @@ from sklearn.metrics import accuracy_score
 
 
 def _accuracy(x: pd.DataFrame, y: pd.Series, tree: DecisionTree) -> float:
-    predictions = [tree.predict(tuple(row[1:]))  # type: ignore
-                   for row in x.itertuples()]  # type: ignore
-
+    predictions = tree.predict(x)
     return float(accuracy_score(y, predictions))
 
 
@@ -41,10 +39,10 @@ class EvoTree:
         self.unmap_dict: dict[int, Any] = {}
         self.tree: Union[DecisionTree, None] = None
 
-    def _init_population(self) -> list[DecisionTree]:
+    def _init_population(self, X_train: pd.DataFrame, y_train: pd.Series) -> list[DecisionTree]:
         return [
-            init_tree(self.max_depth, self.no_attributes,
-                      self.domains, self.no_classes, self.leaf_probability) for _ in range(self.pop_size)
+            init_tree(self.max_depth, self.no_attributes, self.domains, self.no_classes,
+                      self.leaf_probability, X_train, y_train) for _ in range(self.pop_size)
         ]
 
     def _map_target(self, y: pd.Series) -> pd.Series:
@@ -65,7 +63,7 @@ class EvoTree:
         self.no_classes = y_mapped.nunique()
         candidate_scores = []
 
-        population = self._init_population()
+        population = self._init_population(x, y_mapped)
         scores = [_accuracy(x, y_mapped, tree) for tree in population]
 
         best_score = max(scores)
@@ -117,10 +115,7 @@ class EvoTree:
         if (self.tree is None):
             raise TreeNotConstructedYetException()
         predictions = self.tree.predict(x)
-        # predictions = [self.tree.predict(tuple(row[1:]))  # type: ignore
-        #                for row in x.itertuples()]  # type: ignore
-
-        return predictions.apply(lambda y: self.unmap_dict[y]) # type: ignore
+        return predictions.map(self.unmap_dict) # type: ignore
 
     def print_tree(self) -> None:
         if (self.tree is None):

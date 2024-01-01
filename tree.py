@@ -80,7 +80,7 @@ class InnerNode(Node):
     def predict(self, x: tuple[float, ...] | pd.DataFrame) -> int | pd.Series[int]:
         if isinstance(x, pd.DataFrame):
             mask = x.iloc[:, self.attribute] < self.threshold
-            return pd.concat([self.children[0].predict(x[mask]), self.children[1].predict(x[~mask])], ignore_index=True) # type: ignore
+            return pd.concat([self.children[0].predict(x[mask]), self.children[1].predict(x[~mask])]) # type: ignore
         if x[self.attribute] < self.threshold:
             return self.children[0].predict(x)
         else:
@@ -105,7 +105,7 @@ class LeafNode(Node):
 
     def predict(self, x: tuple[float, ...] | pd.DataFrame) -> int | pd.Series[int]:
         if isinstance(x, pd.DataFrame):
-            return pd.Series(self.leaf_class, index=np.arange(len(x)))
+            return pd.Series(self.leaf_class, index=x.index)
         return self.leaf_class
 
     def copy(self) -> LeafNode:
@@ -166,7 +166,10 @@ class DecisionTree:
         ...
 
     def predict(self, x: tuple[float, ...] | pd.DataFrame) -> int | pd.Series[int]:
-        return self.root.predict(x)
+        if isinstance(x, pd.DataFrame):
+            return self.root.predict(x).reindex(x.index)
+        else:
+            return self.root.predict(x)
 
     def copy(self) -> DecisionTree:
         return DecisionTree(self.root.copy())

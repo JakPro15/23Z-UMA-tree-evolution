@@ -1,5 +1,7 @@
 from tree import LeafNode, InnerNode, DecisionTree, print_tree
 from io import StringIO
+import pandas as pd
+from sklearn.metrics import accuracy_score
 
 
 def test_prediction():
@@ -14,6 +16,30 @@ def test_prediction():
     assert tree.predict((2, 3)) == 1
     assert tree.predict((5, 1)) == 0
     assert tree.predict((4, 2)) == 1
+
+
+def test_prediction_dataframe():
+    # example from initial documentation, pages 1-2
+    # a_1 is attribute 0, a_2 is attribute 1
+    leaf1 = LeafNode(1)
+    leaf2 = LeafNode(0)
+    leaf3 = LeafNode(1)
+    inner = InnerNode(1, 2, children=(leaf2, leaf3))
+    root = InnerNode(0, 4, children=(leaf1, inner))
+    tree = DecisionTree(root)
+    predictions = tree.predict(pd.DataFrame([(2, 3), (5, 1), (4, 2)], columns=['a1', 'a2'], index=[0, 1, 2]))
+    assert accuracy_score([1, 0, 1], predictions) == 1.0
+
+
+def test_prediction_multiclass_dataframe():
+    leaf1 = LeafNode(0)
+    leaf2 = LeafNode(1)
+    leaf3 = LeafNode(2)
+    inner = InnerNode(1, 2, children=(leaf2, leaf3))
+    root = InnerNode(0, 4, children=(leaf1, inner))
+    tree = DecisionTree(root)
+    predictions = tree.predict(pd.DataFrame([(2, 3), (5, 1), (4, 2)], columns=['a1', 'a2'], index=[0, 1, 2]))
+    assert accuracy_score([0, 1, 2], predictions) == 1.0
 
 
 def test_leaf_trees():

@@ -1,6 +1,7 @@
 from tree import DecisionTree, Node, InnerNode, LeafNode, init_node
 from typing import Any, Union
 from random import random, choice, uniform, shuffle
+import pandas as pd
 
 
 def _replace_child(tree: DecisionTree, parent: Union[InnerNode, None], old_child: Node, new_child: Node) -> None:
@@ -48,8 +49,9 @@ def _do_leaf_inner_swap(tree: DecisionTree, node: Node, no_attributes: int,
     if isinstance(node, LeafNode):
         if node.depth() >= max_depth:
             return
-        new_node = init_node(1, no_attributes, domains, no_classes,
-                             leaf_probability=lambda _: 0, parent=node.parent)
+        new_node = init_node(1, no_attributes, domains, no_classes, lambda _: 0, 0,
+                             pd.DataFrame([], index=[], columns=[str(i) for i in range(no_attributes)]),
+                             pd.Series([], index=[]), parent=node.parent)
         _replace_child(tree, node.parent, node, new_node)
     else:
         leaf_classes_count = [0 for _ in range(no_classes)]
