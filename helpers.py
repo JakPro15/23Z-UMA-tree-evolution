@@ -3,11 +3,12 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
 import statistics
+from typing import Any
 
 RANDOM_STATE = 42
 
 
-def cross_validate(model: EvoTree, x: pd.DataFrame, y: pd.Series, k=5) -> tuple[float, float, float, float]:
+def cross_validate(model: Any, x: pd.DataFrame, y: pd.Series, k=5) -> tuple[float, float, float, float]:
     kf = KFold(n_splits=k)
     scores = []
 
