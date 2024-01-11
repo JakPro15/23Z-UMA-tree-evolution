@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from reproduction import *
-from succesion import *
+from succession import *
 from numpy import sqrt
 
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     reproductions = ["proportional", "rank_0.05",
                      "truncation_0.8", "tournament_2"]
-    succesions = ["generational", "elite_2"]
+    successions = ["generational", "elite_2"]
 
     datasets = ["breast_cancer", "dry_bean", "glass", "lol", "wine"]
     official_names = {
@@ -67,19 +67,19 @@ if __name__ == "__main__":
         "lol": "high_diamond_ranked_10min",
         "wine": "wine",
     }
-    
+
 
     with open("./results/best_hyper.csv", "w") as file:
         pass
 
     for dataset in datasets:
         data = pd.read_csv(f"experiment_results/{dataset}.csv", names=["seed_nr", "max_depth", "reproduction", "mutation_probability",
-                           "leaf_inner_swap_probability", "crossover_probability", "succesion", "accuracy", "std_dev", "min_score", "max_score"])
+                           "leaf_inner_swap_probability", "crossover_probability", "succession", "accuracy", "std_dev", "min_score", "max_score"])
 
         data = aggregate_data(data)
 
         data["reproduction"] = [reproductions[j] for j in data["reproduction"]]
-        data["succesion"] = [succesions[k] for k in data["succesion"]]
+        data["succession"] = [successions[k] for k in data["succession"]]
 
         data.to_csv(f"./results/{dataset}.csv", index=False)
 

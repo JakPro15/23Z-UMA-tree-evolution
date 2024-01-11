@@ -3,7 +3,7 @@ from random import seed
 from helpers import cross_validate, prepare_datasets, RANDOM_STATE
 from multiprocessing import Process
 from reproduction import *
-from succesion import *
+from succession import *
 
 
 POPULATION_SIZE = 20
@@ -23,7 +23,7 @@ reproductions = [
         population, fitnesses, 2),
 ]
 
-succesions = [
+successions = [
     generational_succession,
     lambda population, genetic_operations_population, scores, genetic_operations_scores: elite_succession(
         population, genetic_operations_population, scores, genetic_operations_scores, 2),
@@ -37,7 +37,7 @@ def run_experiment(name, data, counters, file_lengths):
                 for mutation_probability in [0.4, 0.8]:
                     for leaf_inner_swap_probabilty in [0, 0.3]:
                         for crossover_probability in [0, 0.4]:
-                            for k, succesion in enumerate(succesions):
+                            for k, succession in enumerate(successions):
                                 counters[name] += 1
                                 if counters[name] <= file_lengths[name]:
                                     continue
@@ -45,7 +45,7 @@ def run_experiment(name, data, counters, file_lengths):
                                 seed(seed_nr)
 
                                 model = EvoTree(POPULATION_SIZE, max_depth, leaf_probability, MAX_ITERATIONS, reproduction,
-                                                mutation_probability, leaf_inner_swap_probabilty, crossover_probability, succesion)
+                                                mutation_probability, leaf_inner_swap_probabilty, crossover_probability, succession)
 
                                 accuracy, std_dev, min_score, max_score = cross_validate(
                                     model, data[0], data[1]

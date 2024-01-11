@@ -20,7 +20,7 @@ class EvoTree:
                  reproduction: Callable[[list[DecisionTree], list[float]], list[DecisionTree]],
                  mutation_probability: float, leaf_inner_swap_probabilty: float,
                  crossover_probability: float,
-                 succesion: Callable[[list[DecisionTree], list[DecisionTree], list[float], list[float]], tuple[list[DecisionTree], list[float]]],
+                 succession: Callable[[list[DecisionTree], list[DecisionTree], list[float], list[float]], tuple[list[DecisionTree], list[float]]],
                  ) -> None:
         self.pop_size = pop_size
         self.max_depth = max_depth
@@ -30,7 +30,7 @@ class EvoTree:
         self.mutation_probability = mutation_probability
         self.leaf_inner_swap_probabilty = leaf_inner_swap_probabilty
         self.crossover_probability = crossover_probability
-        self.succesion = succesion
+        self.succession = succession
         self.population = None
         self.no_attributes: int = 0
         self.domains: list[tuple[float, float]] = []
@@ -96,7 +96,7 @@ class EvoTree:
                 best_score = candidate_score
                 best_tree = candidate_tree
 
-            population, scores = self.succesion(
+            population, scores = self.succession(
                 population, genetic_operations_population, scores, genetic_operations_scores)
 
             iter += 1

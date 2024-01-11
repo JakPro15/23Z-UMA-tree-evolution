@@ -6,7 +6,7 @@ checkpoint_file = "checkpoint.pkl"
 from helpers import prepare_datasets
 from random import seed
 from reproduction import tournament_reproduction
-from succesion import elite_succession
+from succession import elite_succession
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from statistics import mean, stdev
 import matplotlib.pyplot as plt
@@ -61,9 +61,9 @@ if __name__ == "__main__":
     pop_size = 20
     max_iters = 500
     reproduction = lambda population, fitnesses: tournament_reproduction(population, fitnesses, 2)
-    succesion = lambda population, genetic_operations_population, scores, genetic_operations_scores: elite_succession(
+    succession = lambda population, genetic_operations_population, scores, genetic_operations_scores: elite_succession(
         population, genetic_operations_population, scores, genetic_operations_scores, 2)
-    
+
     results_evo = {
         "breast_cancer_wisconsin_diagnostic": [[], [], None],
         "dry_bean_dataset": [[], [], None],
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         "high_diamond_ranked_10min": [[], [], None],
         "wine": [[], [], None],
     }
-    
+
     if os.path.exists(checkpoint_file):
         print("Resuming from the checkpoint.")
         with open(checkpoint_file, "rb") as checkpoint_fp:
@@ -94,19 +94,19 @@ if __name__ == "__main__":
             seed(seed_nr)
             np.random.seed(seed_nr)
 
-            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.8, 0.3, 0.4, succesion)
+            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.8, 0.3, 0.4, succession)
             fit_predict_save(model, datasets, results_evo, "breast_cancer", "breast_cancer_wisconsin_diagnostic")
 
-            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.8, 0.3, 0.0, succesion)
+            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.8, 0.3, 0.0, succession)
             fit_predict_save(model, datasets, results_evo, "dry_bean", "dry_bean_dataset")
 
-            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.8, 0.3, 0.0, succesion)
+            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.8, 0.3, 0.0, succession)
             fit_predict_save(model, datasets, results_evo, "glass", "glass_identification")
 
-            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.8, 0.3, 0.4, succesion)
+            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.8, 0.3, 0.4, succession)
             fit_predict_save(model, datasets, results_evo, "lol", "high_diamond_ranked_10min")
 
-            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.4, 0.0, 0.4, succesion)
+            model = EvoTree(pop_size, 5, leaf_probability, max_iters, reproduction, 0.4, 0.0, 0.4, succession)
             fit_predict_save(model, datasets, results_evo, "wine", "wine")
 
             model = Id3Estimator(5, 1, False, False, 0.0, True)
