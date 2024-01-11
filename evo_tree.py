@@ -52,8 +52,7 @@ class EvoTree:
 
         return y.map(self.map_dict)  # type: ignore
 
-    def fit(self, x: pd.DataFrame, y: pd.Series) -> list[float]:
-
+    def fit(self, x: pd.DataFrame, y: pd.Series, early_stop_iterations: int = 50) -> list[float]:
         y_mapped = self._map_target(y)
 
         iter = 0
@@ -102,7 +101,7 @@ class EvoTree:
 
             iter += 1
 
-            if iter % 50 == 0:
+            if iter % early_stop_iterations == 0:
                 if best_score == prev_score:
                     break
                 else:
