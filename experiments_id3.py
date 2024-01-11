@@ -20,8 +20,8 @@ def extract_data_uciml(data):
 
     return (x, y)
 
-def run_experiment(name, data, counters, file_lengths, start_seed, end_seed):
-    for seed_nr in range(start_seed, end_seed):
+def run_experiment(name, data, counters, file_lengths):
+    for seed_nr in range(25):
         for max_depth in [5, 20]:
             for min_samples_split in [1, 2, 10]:
                 for prune in [True, False]:
@@ -49,10 +49,10 @@ def run_experiment(name, data, counters, file_lengths, start_seed, end_seed):
 if __name__ == "__main__":
     datasets = {}
 
-    # datasets["breast_cancer"] = extract_data_uciml(fetch_ucirepo(id=17).data)
+    datasets["breast_cancer"] = extract_data_uciml(fetch_ucirepo(id=17).data)
     datasets["dry_bean"] = extract_data_uciml(fetch_ucirepo(id=602).data)
-    # datasets["glass"] = extract_data_uciml(fetch_ucirepo(id=42).data)
-    # datasets["wine"] = extract_data_uciml(fetch_ucirepo(id=109).data)
+    datasets["glass"] = extract_data_uciml(fetch_ucirepo(id=42).data)
+    datasets["wine"] = extract_data_uciml(fetch_ucirepo(id=109).data)
 
     data = pd.read_csv('./datasets/high_diamond_ranked_10min.csv')
 
@@ -64,21 +64,6 @@ if __name__ == "__main__":
         attrs, target, test_size=0.2, random_state=RANDOM_STATE)
 
     datasets["lol"] = (x, y)
-
-    datasets["dry_bean2"] = datasets["dry_bean"]
-    datasets["lol2"] = datasets["lol"]
-
-    datasets["dry_bean3"] = datasets["dry_bean"]
-    datasets["lol3"] = datasets["lol"]
-
-    ranges = {
-        "lol": (0, 4),
-        "lol2": (4, 8),
-        "lol3": (8, 12),
-        "dry_bean": (0, 4),
-        "dry_bean2": (4, 8),
-        "dry_bean3": (8, 12)
-    }
 
     counters = dict([(name, 0) for name in datasets])
     file_lengths = dict([(name, 0) for name in datasets])
@@ -93,7 +78,7 @@ if __name__ == "__main__":
     processes = []
 
     for name, data in datasets.items():
-        process = Process(target=run_experiment, args=(name, data, counters, file_lengths, *ranges[name]))
+        process = Process(target=run_experiment, args=(name, data, counters, file_lengths))
         processes.append(process)
         process.start()
 
