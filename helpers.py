@@ -4,9 +4,37 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
 import statistics
 from typing import Any
+from ucimlrepo import fetch_ucirepo, dotdict
+from sklearn.model_selection import train_test_split
 
 RANDOM_STATE = 42
 
+def extract_data_uciml(data: dotdict):
+    target = data.targets.squeeze()
+    attrs = data.features
+
+    x, x_test, y, y_test = train_test_split(
+        attrs, target, test_size=0.2, random_state=RANDOM_STATE)
+
+    return (x, y, x_test, y_test)
+
+
+def prepare_datasets():
+    datasets = {}
+
+    datasets["breast_cancer"] = extract_data_uciml(fetch_ucirepo(id=17).data)
+    datasets["dry_bean"] = extract_data_uciml(fetch_ucirepo(id=602).data)
+    datasets["glass"] = extract_data_uciml(fetch_ucirepo(id=42).data)
+    datasets["wine"] = extract_data_uciml(fetch_ucirepo(id=109).data)
+
+    data = pd.read_csv('./datasets/high_diamond_ranked_10min.csv')
+    target = data['blueWins']
+    attrs = data.drop(columns=['gameId', 'blueWins'])
+    x, x_test, y, y_test = train_test_split(
+        attrs, target, test_size=0.2, random_state=RANDOM_STATE)
+    datasets["lol"] = (x, y, x_test, y_test)
+
+    return datasets
 
 def cross_validate(model: Any, x: pd.DataFrame, y: pd.Series, k=5) -> tuple[float, float, float, float]:
     kf = KFold(n_splits=k)
