@@ -19,7 +19,7 @@ def extract_data_uciml(data: dotdict):
     return (x, y, x_test, y_test)
 
 
-def prepare_datasets():
+def prepare_datasets() -> dict[str, tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]]:
     datasets = {}
 
     datasets["breast_cancer"] = extract_data_uciml(fetch_ucirepo(id=17).data)

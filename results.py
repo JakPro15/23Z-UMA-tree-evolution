@@ -44,12 +44,12 @@ def save_best_row(data: pd.DataFrame, dataset: str):
         file.write(f"{dataset}\n")
 
 
-def generate_plots(data: pd.DataFrame):
+def generate_plots(data: pd.DataFrame, dataset: str):
     for plot_kind in [sns.stripplot, sns.boxplot]:
         for column in data.columns.drop(["accuracy", "std_dev", "min_score", "max_score"]):
             plot_kind(x=column, y="accuracy", data=data)
-            plt.title(f"Accuracy for: {column}")
-            plt.savefig(f"./plots/{dataset}_{column}_{plot_kind.__name__}.png")
+            plt.title(f"Wpływ hiperparametru {column}\nna zbiorze {dataset}")
+            plt.savefig(f"./plots/{column}_{dataset}_{plot_kind.__name__}.png")
             plt.close()
 
 
@@ -60,10 +60,21 @@ if __name__ == "__main__":
     succesions = ["generational", "elite_2"]
 
     datasets = ["breast_cancer", "dry_bean", "glass", "lol", "wine"]
+    official_names = {
+        "breast_cancer": "breast_cancer_wisconsin_diagnostic",
+        "dry_bean": "dry_bean_dataset",
+        "glass": "glass_identification",
+        "lol": "high_diamond_ranked_10min",
+        "wine": "wine",
+    }
+    
+
+    with open("./results/best_hyper.csv", "w") as file:
+        pass
 
     for dataset in datasets:
         data = pd.read_csv(f"experiment_results/{dataset}.csv", names=["seed_nr", "max_depth", "reproduction", "mutation_probability",
-                           "leaf_inner_swap_probabilty", "crossover_probability", "succesion", "accuracy", "std_dev", "min_score", "max_score"])
+                           "leaf_inner_swap_probability", "crossover_probability", "succesion", "accuracy", "std_dev", "min_score", "max_score"])
 
         data = aggregate_data(data)
 
@@ -74,7 +85,7 @@ if __name__ == "__main__":
 
         save_best_row(data, dataset)
 
-        generate_plots(data)
+        generate_plots(data, official_names[dataset])
 
     id3_datasets = [f"id3_{name}" for name in datasets]
 
@@ -87,5 +98,3 @@ if __name__ == "__main__":
         data.to_csv(f"./results/{dataset}.csv", index=False)
 
         save_best_row(data, dataset)
-
-        generate_plots(data)

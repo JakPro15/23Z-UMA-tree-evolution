@@ -1,4 +1,4 @@
-max_depth,reproduction,mutation_probability,leaf_inner_swap_probabilty,crossover_probability,succesion,accuracy,min_score,max_score,std_dev
+max_depth,reproduction,mutation_probability,leaf_inner_swap_probability,crossover_probability,succesion,accuracy,min_score,max_score,std_dev
 5,proportional,0.4,0.0,0.0,generational,0.4603159663865546,0.2941176470588235,0.7352941176470589,0.07467567701931498
 5,proportional,0.4,0.0,0.0,elite_2,0.5018890756302521,0.3235294117647059,0.7058823529411765,0.08267378045063277
 5,proportional,0.4,0.0,0.4,generational,0.4683294117647058,0.2941176470588235,0.6764705882352942,0.08675423901969222
