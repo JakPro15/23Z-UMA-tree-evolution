@@ -1,4 +1,4 @@
-from results import get_std_dev
+from aggregate_results import get_std_dev
 import numpy as np
 from statistics import stdev, mean
 from pytest import approx

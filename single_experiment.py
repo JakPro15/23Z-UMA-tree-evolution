@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from ucimlrepo import fetch_ucirepo
 import statistics
-from results import get_std_dev
+from aggregate_results import get_std_dev
 import numpy as np
 
 
