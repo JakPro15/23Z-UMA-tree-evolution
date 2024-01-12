@@ -6,10 +6,10 @@ from succession import *
 from numpy import sqrt
 
 
-def get_std_dev(accuracy: pd.Series, accuracy_square: pd.Series, std_dev_square: pd.Series):
-    first_part = 4 * std_dev_square
+def get_std_dev(accuracy, accuracy_squares_sum, std_dev_squares_sum):
+    first_part = 4 * std_dev_squares_sum
     second_part = 125 * (accuracy ** 2)
-    third_part = 5 * accuracy_square
+    third_part = 5 * accuracy_squares_sum
     return sqrt((first_part - second_part + third_part) / 124)
 
 

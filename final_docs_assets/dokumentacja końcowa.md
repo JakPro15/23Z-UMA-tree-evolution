@@ -1,5 +1,5 @@
 ---
-geometry: "left=2cm,right=2cm,top=2cm,bottom=2cm"
+geometry: "left=1.5cm,right=1.5cm,top=1.5cm,bottom=1.5cm"
 ---
 
 # UMA Projekt – Ewolucja drzewa
@@ -145,7 +145,128 @@ Wyniki uzyskane przez nasz algorytm porównujemy z wynikami istniejącej impleme
 
 W celu weryfikacji poprawności implementacji algorytmu, przygotowaliśmy testy jednostkowe do jego części składowych niezawierających losowości. Są one zawarte w plikach test_tree.py oraz test_genetic_operations.py. Ponadto, sprawdziliśmy poprawność inicjalizacji drzewa oraz reprodukcji w pliku manual_testing.ipynb - dla inicjalizacji wypisujemy wygenerowane drzewo, a dla reprodukcji rysujemy histogram przybliżający, jak zostają wybrane osobniki w reprodukcji.
 
-Poprawność całości implementacji algorytmu pokazuje też porównanie z wynikami algorytmu ID3, zawarte w poniższej sekcji.
+Poprawność całości implementacji algorytmu pokazuje porównanie z wynikami algorytmu ID3, zawarte w poniższej sekcji.
 
 
 ### 4. Eksperymenty
+
+#### Przeszukiwanie po hipersiatce hiperparametrów\
+Uruchomiliśmy nasz algorytm dla $128$ różnych kombinacji hiperparametrów. Liczba ta została ustalona na podstawie przewidywanego czasu obliczeń - obliczenia zajęły kilka dni. Sprawdzane były następujące wartości każdego z hiperparametrów:\
+- ```max_depth``` - maksymalna głębokość drzewa w populacji - wartości $5$ oraz $20$;\
+- ```reproduction``` - sprawdzane były reprodukcje: proporcjonalna, rangowa z parametrami $a=0{,}05$ i $k=0$, progowa z progiem $0{,}8$, turniejowa z rozmiarem turnieju $2$;\
+- ```mutation_probability``` - prawdopodobieństwo zajścia mutacji dla każdego drzewa w populacji - wartości $0{,}4$ oraz $0{,}8$;\
+- ```leaf_inner_swap_probability``` - prawdopodobieństwo zamiany liścia w węzeł wewnętrzny lub odwrotnie podczas mutacji - wartości $0$ oraz $0{,}3$;\
+- ```crossover_probability``` - prawdopodobieństwo zajścia krzyżowania dla każdej pary drzew - wartości $0$ oraz $0{,}4$;\
+- ```succession``` - sprawdzane były sukcesje: generacyjna oraz elitarna dla rozmiaru elity $2$.
+
+Prawdopodobieństwo, że węzeł będzie liściem podczas inicjalizacji ustaliliśmy na $1-\left(\frac{1}{2}\right)^g$, gdzie $g$ to głębokość tego węzła (korzeń ma głębokość $0$).
+
+Przyjęliśmy rozmiar populacji równy $20$ - czas działania algorytmu nie pozwolił na optymalizację tego hiperparametru.
+
+Przyjęliśmy maksymalną liczbę iteracji równą $500$; obliczenia są również zatrzymywane gdy ocena najlepszego drzewa nie poprawi się w ciągu $50$ kolejnych iteracji. Warunek ten jest sprawdzany co $50$-tą iterację.
+
+Eksperyment został wykonany dla wszystkich $5$ zbiorów danych. Z ich wszystkich został wydzielony zbiór testowy wielkości $0{,}2$ całego zbioru. Dla każdej kombinacji hiperparametrów wykonano $25$ uruchomień $5$-krotnej walidacji krzyżowej na zbiorze bez zbioru testowego, dla każdego zbioru danych. Na poniższych wykresach są przedstawione uśrednione dokładności na zbiorach walidacyjnych z tych $125$ uruchomień algorytmu.
+
+#### Wpływ hiperparametru ```max_depth``` na działanie algorytmu\
+
+![](plots/max_depth_glass_identification_stripplot.png){ width=300px } ![](plots/max_depth_glass_identification_boxplot.png){ width=300px }\
+![](plots/max_depth_dry_bean_dataset_stripplot.png){ width=300px } ![](plots/max_depth_dry_bean_dataset_boxplot.png){ width=300px }\
+![](plots/max_depth_breast_cancer_wisconsin_diagnostic_stripplot.png){ width=300px } ![](plots/max_depth_breast_cancer_wisconsin_diagnostic_boxplot.png){ width=300px }\
+![](plots/max_depth_wine_stripplot.png){ width=300px } ![](plots/max_depth_wine_boxplot.png){ width=300px }\
+![](plots/max_depth_high_diamond_ranked_10min_stripplot.png){ width=300px } ![](plots/max_depth_high_diamond_ranked_10min_boxplot.png){ width=300px }\
+
+Jak widać na wykresach, wartość hiperparametru ```max_depth``` nie wpłynęła znacząco na wyniki algorytmu. Dla zbiorów danych ```glass_identification``` uzyskano nawet pojedyncze znacząco lepsze wartości dla ```max_depth = 5```. Oznacza to, że w ogólności lepsze są niższe wartości ```max_depth``` - skoro płytsze drzewa wystarczają, to nie ma sensu próbować konstruować głębszych, dla których operacje (w szczególności predykcja) są wolniejsze.
+
+#### Wpływ hiperparametru ```reproduction``` na działanie algorytmu\
+
+![](plots/reproduction_glass_identification_stripplot.png){ width=300px } ![](plots/reproduction_glass_identification_boxplot.png){ width=300px }\
+![](plots/reproduction_dry_bean_dataset_stripplot.png){ width=300px } ![](plots/reproduction_dry_bean_dataset_boxplot.png){ width=300px }\
+![](plots/reproduction_breast_cancer_wisconsin_diagnostic_stripplot.png){ width=300px } ![](plots/reproduction_breast_cancer_wisconsin_diagnostic_boxplot.png){ width=300px }\
+![](plots/reproduction_wine_stripplot.png){ width=300px } ![](plots/reproduction_wine_boxplot.png){ width=300px }\
+![](plots/reproduction_high_diamond_ranked_10min_stripplot.png){ width=300px } ![](plots/reproduction_high_diamond_ranked_10min_boxplot.png){ width=300px }\
+
+Dla wszystkich zbiorów danych reprodukcja turniejowa (z rozmiarem turnieju $2$) okazała się być najlepsza. Jednakże, dla zbioru danych ```high_diamond_ranked_10min``` reprodukcja proporcjonalna okazała się być niemal równie dobra - najprawdopodobniej dla funkcji celu innych niż dokładność (sensowne drzewa mają dokładności z przedziału $0{,}5$-$0{,}8$, więc reprodukcja proporcjonalna może mieć problemy z rozróżnieniem lepszych drzew od średnio dobrych), lub dla innych zbiorów danych, mogłaby ona osiągnąć wyniki lepsze niż reprodukcja turniejowa.
+
+#### Wpływ hiperparametru ```mutation_probability``` na działanie algorytmu\
+
+![](plots/mutation_probability_glass_identification_stripplot.png){ width=300px } ![](plots/mutation_probability_glass_identification_boxplot.png){ width=300px }\
+![](plots/mutation_probability_dry_bean_dataset_stripplot.png){ width=300px } ![](plots/mutation_probability_dry_bean_dataset_boxplot.png){ width=300px }\
+![](plots/mutation_probability_breast_cancer_wisconsin_diagnostic_stripplot.png){ width=300px } ![](plots/mutation_probability_breast_cancer_wisconsin_diagnostic_boxplot.png){ width=300px }\
+![](plots/mutation_probability_wine_stripplot.png){ width=300px } ![](plots/mutation_probability_wine_boxplot.png){ width=300px }\
+![](plots/mutation_probability_high_diamond_ranked_10min_stripplot.png){ width=300px } ![](plots/mutation_probability_high_diamond_ranked_10min_boxplot.png){ width=300px }\
+
+Wyższe prawdopodobieństwo mutacji pozwoliło, dla niektórych kombinacji hiperparametrów, osiągnąć lepsze wyniki. Jako jedyne źródło eksploracji algorytmu, częstsza mutacja daje większe prawdopodobieństwo trafienia na drzewa lepiej przybliżające funkcję celu. Jednakże, w przypadku obecności krzyżowania, silniejsza mutacja zwiększa zdolności eksploracyjne kosztem eksploatacji i mogą zdarzyć się sytuacje, gdzie okolica maksimum lokalnego nie zostanie wystarczająco dobrze sprawdzona. Zapewne dlatego dla silniejszej mutacji jest także więcej słabszych wyników (pierwszy kwartyl lub drugi kwartyl na wszystkich wykresach pudełkowych poza ```high_diamond_ranked_10min``` jest niżej dla wyższego prawdopodobieństwa mutacji).
+
+Przeprowadziliśmy dodatkowe eksperymenty dla ```mutation_probability = 1,0```. Wyniki w poniższej tabeli to zagregowane dokładności z $25$-krotnie powtórzonej $5$-krotnej walidacji krzyżowej (używany był zbiór bez zbioru testowego) na różnych zbiorach danych, w formacie średnia $\pm$ odchylenie standardowe. Wartości pozostałych hiperparametrów były takie, jak dla najlepszej kombinacji hiperparametrów dla danego zbioru danych.
+
+ p.mutacji \\ zbiór danych       cancer                 bean                   glass             wine                 games
+--------------------------- -------------------- -------------------- -------------------- -------------------- --------------------
+        $0{,}4$              $0{,}92\pm 0{,}02$   $0{,}68\pm 0{,}10$   $0{,}54\pm 0{,}10$   $0{,}88\pm 0{,}06$   $0{,}72\pm 0{,}01$
+        $0{,}8$              $0{,}92\pm 0{,}02$   $0{,}73\pm 0{,}08$   $0{,}57\pm 0{,}10$   $0{,}87\pm 0{,}06$   $0{,}72\pm 0{,}01$
+        $1{,}0$              $0{,}92\pm 0{,}02$   $0{,}74\pm 0{,}08$   $0{,}56\pm 0{,}10$   $0{,}88\pm 0{,}06$   $0{,}72\pm 0{,}01$
+
+Jak widać, dalsze zwiększenie prawdopodobieństwa mutacji do maksymalnej wartości nie polepszyło znacząco wyników. Algorytm działa lepiej, jeżeli do etapu krzyżowania i sukcesji dojdą jakieś niezmutowane drzewa.
+
+#### Wpływ hiperparametru ```leaf_inner_swap_probability``` na działanie algorytmu\
+
+![](plots/leaf_inner_swap_probability_glass_identification_stripplot.png){ width=300px } ![](plots/leaf_inner_swap_probability_glass_identification_boxplot.png){ width=300px }\
+![](plots/leaf_inner_swap_probability_dry_bean_dataset_stripplot.png){ width=300px } ![](plots/leaf_inner_swap_probability_dry_bean_dataset_boxplot.png){ width=300px }\
+![](plots/leaf_inner_swap_probability_breast_cancer_wisconsin_diagnostic_stripplot.png){ width=300px } ![](plots/leaf_inner_swap_probability_breast_cancer_wisconsin_diagnostic_boxplot.png){ width=300px }\
+![](plots/leaf_inner_swap_probability_wine_stripplot.png){ width=300px } ![](plots/leaf_inner_swap_probability_wine_boxplot.png){ width=300px }\
+![](plots/leaf_inner_swap_probability_high_diamond_ranked_10min_stripplot.png){ width=300px } ![](plots/leaf_inner_swap_probability_high_diamond_ranked_10min_boxplot.png){ width=300px }\
+
+Obecność zamiany liścia w węzeł wewnętrzny lub odwrotnie zdecydowanie poprawia wyniki algorytmu. Wyjątkiem jest najlepsza kombinacja hiperparametrów dla zbioru ```wine```, ale nawet na tym zbiorze wyniki dla większości innych kombinacji hiperparametrów są lepsze. Dla zbioru danych ```high_diamond_ranked_10min``` poprawa jest drastyczna. Mutacja bez takiej zamiany (poza przypadkiem powstania dwóch sąsiednich liści z tą samą klasą) nie zmienia struktury drzewa, a tylko parametry pojedynczego węzła. Jeżeli ```leaf_inner_swap_probability``` wynosi $0$, to eksplorację w dziedzinie struktury drzewa musi wykonywać krzyżowanie. Krzyżowanie jednak okazało się niewystarczające.
+
+Przeprowadziliśmy dodatkowe eksperymenty dla ```leaf_inner_swap_probability = 0,6```. Wyniki w poniższej tabeli to zagregowane dokładności z $25$-krotnie powtórzonej $5$-krotnej walidacji krzyżowej (używany był zbiór bez zbioru testowego) na różnych zbiorach danych, w formacie średnia $\pm$ odchylenie standardowe. Wartości pozostałych hiperparametrów były takie, jak dla najlepszej kombinacji hiperparametrów dla danego zbioru danych.
+
+ p.zamiany \\ zbiór danych     cancer                     bean               glass               wine                  games
+--------------------------- -------------------- -------------------- -------------------- -------------------- --------------------
+        $0{,}0$              $0{,}91\pm 0{,}03$   $0{,}61\pm 0{,}07$   $0{,}53\pm 0{,}09$   $0{,}88\pm 0{,}06$   $0{,}72\pm 0{,}02$
+        $0{,}3$              $0{,}92\pm 0{,}02$   $0{,}73\pm 0{,}08$   $0{,}57\pm 0{,}10$   $0{,}88\pm 0{,}06$   $0{,}72\pm 0{,}01$
+        $0{,}6$              $0{,}92\pm 0{,}02$   $0{,}72\pm 0{,}08$   $0{,}54\pm 0{,}10$   $0{,}87\pm 0{,}07$   $0{,}72\pm 0{,}01$
+
+Jak widać, dalsze zwiększanie prawdopodobieństwa zamiany nie prowadzi do znaczącego polepszania wyniku.
+
+#### Wpływ hiperparametru ```crossover_probability``` na działanie algorytmu\
+
+![](plots/crossover_probability_glass_identification_stripplot.png){ width=300px } ![](plots/crossover_probability_glass_identification_boxplot.png){ width=300px }\
+![](plots/crossover_probability_dry_bean_dataset_stripplot.png){ width=300px } ![](plots/crossover_probability_dry_bean_dataset_boxplot.png){ width=300px }\
+![](plots/crossover_probability_breast_cancer_wisconsin_diagnostic_stripplot.png){ width=300px } ![](plots/crossover_probability_breast_cancer_wisconsin_diagnostic_boxplot.png){ width=300px }\
+![](plots/crossover_probability_wine_stripplot.png){ width=300px } ![](plots/crossover_probability_wine_boxplot.png){ width=300px }\
+![](plots/crossover_probability_high_diamond_ranked_10min_stripplot.png){ width=300px } ![](plots/crossover_probability_high_diamond_ranked_10min_boxplot.png){ width=300px }\
+
+Obecność krzyżowania, dla wszystkich zbiorów danych poza ```high_diamond_ranked_10min```, polepszyła wyniki dla niektórych kombinacji hiperparametrów, a dla innych pogorszyła, co widać na wykresach pudełkowych jako oddalenie się od siebie pierwszego i trzeciego kwartylu. Wpływ krzyżowania przy najlepszych kombinacjach hiperparametrów jest niejasny - dla niektórych zbiorów danych krzyżowanie nieznacznie polepszyło wynik, dla innych nieznacznie pogorszyło.
+
+Tak jak w poprzednich przypadkach, eksploatacja wydaje się być mniej ważna od eksploracji w tym eksperymencie - silniejsza mutacja ewidentnie poprawia wynik, a krzyżowanie - nie.
+
+#### Wpływ hiperparametru ```succession``` na działanie algorytmu\
+
+![](plots/succession_glass_identification_stripplot.png){ width=300px } ![](plots/succession_glass_identification_boxplot.png){ width=300px }\
+![](plots/succession_dry_bean_dataset_stripplot.png){ width=300px } ![](plots/succession_dry_bean_dataset_boxplot.png){ width=300px }\
+![](plots/succession_breast_cancer_wisconsin_diagnostic_stripplot.png){ width=300px } ![](plots/succession_breast_cancer_wisconsin_diagnostic_boxplot.png){ width=300px }\
+![](plots/succession_wine_stripplot.png){ width=300px } ![](plots/succession_wine_boxplot.png){ width=300px }\
+![](plots/succession_high_diamond_ranked_10min_stripplot.png){ width=300px } ![](plots/succession_high_diamond_ranked_10min_boxplot.png){ width=300px }\
+
+Elitarna sukcesja zdecydowanie polepszyła wyniki algorytmu w stosunku do sukcesji generacyjnej. Wynika to z tego, że mutacja zmienia drzewa dość mocno - nawet mutacja bez zamiany liścia w węzeł wewnętrzny lub odwrotnie może bardzo popsuć jakość drzewa, np. zmieniając test w korzeniu. W związku z tym, zachowanie najlepszych osobników w populacji jest konieczne - możliwe, że dopiero po wielu iteracjach uzyskana zostanie poprawa, szybka strata dobrego osobnika uniemożliwi jakąkolwiek eksploatację jego okolic.
+
+Przeprowadziliśmy dodatkowe eksperymenty dla rozmiaru elity równego $1$ oraz $3$. Wyniki w poniższej tabeli to zagregowane dokładności z $25$-krotnie powtórzonej $5$-krotnej walidacji krzyżowej (używany był zbiór bez zbioru testowego) na różnych zbiorach danych, w formacie średnia $\pm$ odchylenie standardowe. Wartości pozostałych hiperparametrów były takie, jak dla najlepszej kombinacji hiperparametrów dla danego zbioru danych.
+
+ rozmiar elity \\ zbiór danych     cancer                     bean               glass               wine                  games
+------------------------------- -------------------- -------------------- -------------------- -------------------- --------------------
+        $0$ (s.generacyjna)      $0{,}91\pm 0{,}03$   $0{,}59\pm 0{,}07$   $0{,}49\pm 0{,}09$   $0{,}84\pm 0{,}10$   $0{,}71\pm 0{,}02$
+        $1$                      $0{,}92\pm 0{,}03$   $0{,}69\pm 0{,}09$   $0{,}55\pm 0{,}11$   $0{,}87\pm 0{,}06$   $0{,}72\pm 0{,}01$
+        $2$                      $0{,}92\pm 0{,}02$   $0{,}73\pm 0{,}08$   $0{,}57\pm 0{,}10$   $0{,}88\pm 0{,}06$   $0{,}72\pm 0{,}01$
+        $3$                      $0{,}92\pm 0{,}02$   $0{,}75\pm 0{,}07$   $0{,}56\pm 0{,}09$   $0{,}87\pm 0{,}06$   $0{,}72\pm 0{,}00$
+
+Jak widać, wzrost rozmiaru elity nie zwiększa znacząco efektywności algorytmu. Znacząca poprawa jakości następuje tylko przy zmianie z sukcesji generacyjnej na elitarną z rozmiarem elity $1, z wyjątkiem zbiorów danych breast_cancer_wisconsin_diagnostic oraz high_diamond_ranked_10min. Są to jedyne zbiory dwuklasowe - możliwe, że dla zbiorów wieloklasowych mutacja częściej pogarsza niż poprawia drzewo i elita jest bardziej potrzebna.
+
+#### Najlepsze zestawy hiperparametrów\
+Wyniki w poniższej tabeli to dokładności na zbiorze walidacyjnym, zagregowane z 25-krotnie powtórzonej 5-krotnej walidacji krzyżowej, dla najlepszych zestawów hiperparametrów dla każdego ze zbiorów danych.
+
+ z.danych   ```max_depth```   reprodukcja    p.mut.   p.zamiany   p.krzyż.   sukcesja   średnia      najgorszy   najlepszy   odch.stan.
+---------- ----------------- ------------- --------- ----------- ---------- ---------- ------------ ----------- ----------- ------------
+ cancer            5          turniejowa    $0{,}8$   $0{,}3$      $0{,}4$   elitarna   $0{,}92$     $0{,}87$    $0{,}98$    $0{,}02$
+  bean             5          turniejowa    $0{,}8$   $0{,}3$      $0{,}0$   elitarna   $0{,}73$     $0{,}48$    $0{,}84$    $0{,}08$
+ glass             5          turniejowa    $0{,}8$   $0{,}3$      $0{,}0$   elitarna   $0{,}57$     $0{,}32$    $0{,}85$    $0{,}10$
+ wine              5          turniejowa    $0{,}4$   $0{,}0$      $0{,}4$   elitarna   $0{,}88$     $0{,}62$    $1{,}00$    $0{,}06$
+ games             5          turniejowa    $0{,}8$   $0{,}3$      $0{,}4$   elitarna   $0{,}72$     $0{,}70$    $0{,}74$    $0{,}01$
