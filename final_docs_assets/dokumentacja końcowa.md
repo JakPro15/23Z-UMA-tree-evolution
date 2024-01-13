@@ -273,6 +273,32 @@ Wyniki w poniższej tabeli to dokładności na zbiorze walidacyjnym, zagregowane
  wine              5          turniejowa    $0{,}4$   $0{,}0$      $0{,}4$   elitarna   $0{,}88$     $0{,}62$    $1{,}00$    $0{,}06$
  games             5          turniejowa    $0{,}8$   $0{,}3$      $0{,}4$   elitarna   $0{,}72$     $0{,}70$    $0{,}74$    $0{,}01$
 
+#### Nadmierne dopasowanie\
+
+W celu ustalenia, czy wystąpiło nadmierne dopasowanie, wyliczyliśmy wartości dokładności dla algorytmu ewolucji drzewa dla zbiorów treningowego (tego, który wcześniej był używany do walidacji krzyżowej) i testowego.
+
+Poniższa tabela przedstawia wyniki (dokładności) naszego algorytmu ewolucji drzewa na zbiorze treningowym, zagregowane z $50$ uruchomień algorytmu.
+
+ Zbiór danych   średnia dokładność   odchylenie standardowe   dokładność minimalna   dokładność maksymalna
+-------------- -------------------- ------------------------ ---------------------- -----------------------
+  cancer                $0{,}95$             $0{,}01$              $0{,}92$             $0{,}97$
+  dry_bean              $0{,}72$             $0{,}09$              $0{,}46$             $0{,}85$
+  glass                 $0{,}62$             $0{,}06$              $0{,}47$             $0{,}74$
+  wine                  $0{,}93$             $0{,}03$              $0{,}86$             $0{,}98$
+  games                 $0{,}72$             $0{,}01$              $0{,}70$             $0{,}73$
+
+Poniższa tabela przedstawia wyniki (dokładności) naszego algorytmu ewolucji drzewa na zbiorze testowym, zagregowane z $50$ uruchomień algorytmu.
+
+ Zbiór danych   średnia dokładność   odchylenie standardowe   dokładność minimalna   dokładność maksymalna
+-------------- -------------------- ------------------------ ---------------------- -----------------------
+ cancer            $0{,}95$                 $0{,}02$                  $0{,}89$                 $0{,}98$
+ dry_bean          $0{,}72$                 $0{,}10$                  $0{,}44$                 $0{,}84$
+ glass             $0{,}62$                 $0{,}08$                  $0{,}44$                 $0{,}77$
+ wine              $0{,}90$                 $0{,}05$                  $0{,}81$                 $0{,}97$
+ games             $0{,}72$                 $0{,}01$                  $0{,}69$                 $0{,}73$
+
+Wyniki algorytmu są praktycznie takie same dla zbiorów treningowego i testowego, zatem nadmierne dopasowanie nie wystąpiło.
+
 #### Porównanie z algorytmem ID3\
 Skrypt wykonujący poniższy eksperyment jest zawarty w pliku comparison_experiment.py.
 
@@ -322,19 +348,31 @@ Dla zbiorów danych ```breast_cancer_wisconsin_diagnostic```, ```wine``` oraz ``
 
 Algorytm ewolucji drzewa jest przeszukiwaniem w dużej mierze polegającym na losowości - widać to po zdecydowanie większych odchyleniach standardowych wyników. Ponadto, maksymalne wyniki ewolucji drzewa są w przypadku $4$ z $5$ zbiorów danych lepsze - ewolucja drzewa czasami znajduje bardziej globalnie optymalne drzewo niż ID3.
 
+Poniższa tabela przedstawia wyniki (dokładności) algorytmu ID3 na zbiorze treningowym, zagregowane z $50$ uruchomień algorytmu.
+
+ Zbiór danych   średnia dokładność   odchylenie standardowe   dokładność minimalna   dokładność maksymalna
+-------------- -------------------- ------------------------ ---------------------- -----------------------
+  cancer               $0{,}99$             $0{,}00$              $0{,}99$             $0{,}99$
+  dry_bean             $0{,}94$             $0{,}00$              $0{,}93$             $0{,}94$
+  glass                $1{,}00$             $0{,}00$              $1{,}00$             $1{,}00$
+  wine                 $0{,}97$             $0{,}02$              $0{,}92$             $1{,}00$
+  games                $0{,}73$             $0{,}00$              $0{,}73$             $0{,}73$
+
+Algorytm ID3 osiągnął znacząco lepsze wyniki na zbiorze treningowym niż na testowym, szczególnie w przypadku zbioru ```glass_identification```. Oznacza to, że algorytm ewolucji drzewa jest mniej podatny na nadmierne dopasowanie niż algorytm ID3.
+
 Poniżej przedstawione są macierze pomyłek (wyniki na zbiorze testowym, uśrednione dla $50$ uruchomień algorytmu) algorytmu ewolucji drzewa i ID3 dla poszczególnych zbiorów danych.
 
-![](plots/confusion_ewolucja drzew_breast_cancer_wisconsin_diagnostic.png){ width=370px } ![](plots/confusion_id3_breast_cancer_wisconsin_diagnostic.png){ width=370px }
+![](plots/confusion_test_ewolucja drzew_breast_cancer_wisconsin_diagnostic.png){ width=370px } ![](plots/confusion_test_id3_breast_cancer_wisconsin_diagnostic.png){ width=370px }
 
-![](plots/confusion_ewolucja drzew_wine.png){ width=370px } ![](plots/confusion_id3_wine.png){ width=370px }
+![](plots/confusion_test_ewolucja drzew_wine.png){ width=370px } ![](plots/confusion_test_id3_wine.png){ width=370px }
 
-![](plots/confusion_ewolucja drzew_high_diamond_ranked_10min.png){ width=370px } ![](plots/confusion_id3_high_diamond_ranked_10min.png){ width=370px }
+![](plots/confusion_test_ewolucja drzew_high_diamond_ranked_10min.png){ width=370px } ![](plots/confusion_test_id3_high_diamond_ranked_10min.png){ width=370px }
 
 Macierze pomyłek dla zbiorów danych z mniejszą liczbą klas nie wykazują żadnych anomalii, ani znaczących różnic między obydwoma algorytmami.
 
-![](plots/confusion_ewolucja drzew_dry_bean_dataset.png){ width=370px } ![](plots/confusion_id3_dry_bean_dataset.png){ width=370px }
+![](plots/confusion_test_ewolucja drzew_dry_bean_dataset.png){ width=370px } ![](plots/confusion_test_id3_dry_bean_dataset.png){ width=370px }
 
-![](plots/confusion_ewolucja drzew_glass_identification.png){ width=370px } ![](plots/confusion_id3_glass_identification.png){ width=370px }
+![](plots/confusion_test_ewolucja drzew_glass_identification.png){ width=370px } ![](plots/confusion_test_id3_glass_identification.png){ width=370px }
 
 Dla zbiorów danych z większą liczbą klas, algorytm ID3 nie ignoruje żadnej z klas - nawet klasy mające bardzo małą liczbę przykładów są w większości poprawnie klasyfikowane. Algorytm ewolucji drzewa ma natomiast tendencję do ignorowania mało licznych klas - klasy 3, 5 i 6 w zbiorze ```glass_identification``` były przewidywane bardzo rzadko, a czasem w ogóle. W przypadku zbioru ```dry_bean_dataset``` nie ma klas, które byłyby ignorowane, ale dla klas ```SIRA```, ```SEKER``` i ```BARBUNYA``` występuje ponadprzeciętnie dużo pomyłek - w przypadku klasy ```BARBUNYA``` pomyłek było więcej niż poprawnych predykcji.
 
@@ -345,6 +383,8 @@ Macierze pomyłek ponownie pokazują to, co wynika również z tabel - dla klasy
 Implementacja algorytmu ewolucji drzewa jest poprawna; osiągnął on wyniki porównywalne z metodą referencyjną.
 
 Algorytm ewolucji drzewa nadaje się do zadań klasyfikacji z małą ($2$-$3$) liczbą klas.
+
+Algorytm ewolucji drzewa nie jest szczególnie podatny na nadmierne dopasowanie.
 
 W porównaniu z algorytmem ID3, algorytm ewolucji drzewa osiąga porównywalne wyniki dla zadań klasyfikacji z małą liczbą klas. Jednakże, czas jego wykonania jest znacznie dłuższy, zatem jest on mniej efektywny.
 

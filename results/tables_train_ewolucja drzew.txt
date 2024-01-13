@@ -1,0 +1,7 @@
+       Nazwa zbioru danych         średnia dokładność odchylenie standardowe dokładność minimalna dokładność maksymalna
+---------------------------------- ------------------ ---------------------- -------------------- ---------------------
+breast_cancer_wisconsin_diagnostic        0.95                 0.01                  0.92                 0.97         
+         dry_bean_dataset                 0.72                 0.09                  0.46                 0.85         
+       glass_identification               0.62                 0.06                  0.47                 0.74         
+    high_diamond_ranked_10min             0.72                 0.01                  0.70                 0.73         
+               wine                       0.93                 0.03                  0.86                 0.98         
