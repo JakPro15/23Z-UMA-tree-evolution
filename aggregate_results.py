@@ -6,9 +6,18 @@ from succession import *
 from numpy import sqrt
 
 
-def get_std_dev(accuracy, accuracy_squares_sum, std_dev_squares_sum):
+# Script loads experiment results from files, where they were written by
+# experiments_evotree.py and experiments_id3.py, aggregates the results from
+# various seeds and calculates the best hyperparameter values.
+
+
+def get_std_dev(average, accuracy_squares_sum, std_dev_squares_sum):
+    """
+    Calculates standard deviation of 25 joined samples.
+    average is the average value of the resulting sample.
+    """
     first_part = 4 * std_dev_squares_sum
-    second_part = 125 * (accuracy ** 2)
+    second_part = 125 * (average ** 2)
     third_part = 5 * accuracy_squares_sum
     return sqrt((first_part - second_part + third_part) / 124)
 
@@ -19,7 +28,9 @@ def aggregate_data(data: pd.DataFrame) -> pd.DataFrame:
 
     data = data.drop(columns="std_dev")
 
-    data = data.groupby(list(data.drop(columns=["seed_nr", "accuracy", "min_score", "max_score", "accuracy_square", "std_dev_square"]).columns)).agg({
+    data = data.groupby(list(data.drop(columns=["seed_nr", "accuracy",
+                                                "min_score","max_score",
+                                                "accuracy_square", "std_dev_square"]).columns)).agg({
         "accuracy": "mean",
         "min_score": "min",
         "max_score": "max",
@@ -54,7 +65,6 @@ def generate_plots(data: pd.DataFrame, dataset: str):
 
 
 if __name__ == "__main__":
-
     reproductions = ["proportional", "rank_0.05",
                      "truncation_0.8", "tournament_2"]
     successions = ["generational", "elite_2"]

@@ -13,6 +13,10 @@ from aggregate_results import get_std_dev
 import numpy as np
 
 
+# Executes a single experiment of the tree evolution algorithm for hyperparameters
+# set directly in the code.
+
+
 def load_lol_dataset():
     data = pd.read_csv('./datasets/high_diamond_ranked_10min.csv')
     target = data['blueWins']
@@ -22,7 +26,7 @@ def load_lol_dataset():
     return (x, y, x_test, y_test)
 
 if __name__ == "__main__":
-    # reproduction and succession as strings, so they can be printed
+    # reproduction and succession given as strings, so they can be printed
     parameters = dict(
         dataset_name="lol",
         max_depth=5,

@@ -1,9 +1,12 @@
 from evo_tree import EvoTree
 from random import seed
-from helpers import cross_validate, prepare_datasets, RANDOM_STATE
+from helpers import cross_validate, prepare_datasets
 from multiprocessing import Process
 from reproduction import *
 from succession import *
+
+
+# Script executes hyperparameter grid search for tree evolution algorithm.
 
 
 POPULATION_SIZE = 20

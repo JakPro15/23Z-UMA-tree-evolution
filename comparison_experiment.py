@@ -16,6 +16,11 @@ np.float = float
 from id3 import Id3Estimator
 from evo_tree import EvoTree
 
+
+# Script executes comparison of tree evolution and ID3 algorithms with their best hyperparameter values,
+# on training and testing sets.
+
+
 def fit_predict_save(model: EvoTree | Id3Estimator, datasets: dict[str, tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]],
                      results_test: dict[str, list[list, list, None | np.ndarray]],
                      results_train: dict[str, list[list, list, None | np.ndarray]],
@@ -116,15 +121,22 @@ if __name__ == "__main__":
             fit_predict_save(model, datasets, results_id3_test, results_id3_train, "wine", "wine")
 
             print(f"Finished seed {seed_nr}")
-        
+
     def get_base_results_dict(manager: multiprocessing.Manager) -> dict[str, list[list, list, None | np.ndarray]]:
+        """
+        The dict contains, for each dataset:
+        - list of resulting accuracies for each of the 50 algorithm executions
+        - list of resulting confusion matrices for each of the 50 algorithm executions
+        - numpy.ndarray of class labels for confusion matrix display
+        wrapped in multiprocessing.Manager structures, for safe parallelism.
+        """
         return manager.dict({
-        "breast_cancer_wisconsin_diagnostic": manager.list([manager.list(), manager.list(), None]),
-        "dry_bean_dataset": manager.list([manager.list(), manager.list(), None]),
-        "glass_identification": manager.list([manager.list(), manager.list(), None]),
-        "high_diamond_ranked_10min": manager.list([manager.list(), manager.list(), None]),
-        "wine": manager.list([manager.list(), manager.list(), None]),
-    })
+            "breast_cancer_wisconsin_diagnostic": manager.list([manager.list(), manager.list(), None]),
+            "dry_bean_dataset": manager.list([manager.list(), manager.list(), None]),
+            "glass_identification": manager.list([manager.list(), manager.list(), None]),
+            "high_diamond_ranked_10min": manager.list([manager.list(), manager.list(), None]),
+            "wine": manager.list([manager.list(), manager.list(), None]),
+        })
 
     def change_results_dict_to_regular_form(results_evo, results_id3):
         results_evo = dict(results_evo)
@@ -132,7 +144,7 @@ if __name__ == "__main__":
             results_evo[key] = list(results_evo[key])
             results_evo[key][0] = list(results_evo[key][0])
             results_evo[key][1] = list(results_evo[key][1])
-        
+
         results_id3 = dict(results_id3)
         for key in results_id3:
             results_id3[key] = list(results_id3[key])
@@ -149,9 +161,10 @@ if __name__ == "__main__":
     results_id3_test = get_base_results_dict(manager)
     results_evo_train = get_base_results_dict(manager)
     results_id3_train = get_base_results_dict(manager)
-    
+
     with multiprocessing.Pool(processes=5) as pool:
-        pool.starmap(do_loop, [(10 * seed_nr, 10 * (seed_nr + 1), results_evo_test, results_id3_test, results_evo_train, results_id3_train) for seed_nr in range(5)])
+        pool.starmap(do_loop, [(10 * seed_nr, 10 * (seed_nr + 1), results_evo_test, results_id3_test,
+                                results_evo_train, results_id3_train) for seed_nr in range(5)])
 
     results_evo_test, results_id3_test = change_results_dict_to_regular_form(results_evo_test, results_id3_test)
     results_evo_train, results_id3_train = change_results_dict_to_regular_form(results_evo_train, results_id3_train)

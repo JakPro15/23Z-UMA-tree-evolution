@@ -65,6 +65,8 @@ class EvoTree:
         self._prepare_dataset_attributes(x, y_mapped)
         candidate_scores = []
 
+        # Below is the tree evolution algorithm, as described in documentation.
+
         population = self._init_population(x, y_mapped)
         scores = [_accuracy(x, y_mapped, tree) for tree in population]
 

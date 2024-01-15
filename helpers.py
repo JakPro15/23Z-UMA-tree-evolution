@@ -1,4 +1,3 @@
-from evo_tree import EvoTree
 import pandas as pd
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
@@ -6,6 +5,10 @@ import statistics
 from typing import Any
 from ucimlrepo import fetch_ucirepo, dotdict
 from sklearn.model_selection import train_test_split
+
+
+# Training and dataset preparation helper functions.
+
 
 RANDOM_STATE = 42
 

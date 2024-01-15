@@ -9,6 +9,9 @@ from helpers import cross_validate, prepare_datasets
 from multiprocessing import Process
 
 
+# Script executes hyperparameter grid search for ID3 algorithm.
+
+
 def run_experiment(name, data, counters, file_lengths):
     for seed_nr in range(25):
         for max_depth in [5, 20]:
