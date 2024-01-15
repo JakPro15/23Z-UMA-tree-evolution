@@ -46,20 +46,23 @@ class EvoTree:
         ]
 
     def _map_target(self, y: pd.Series) -> pd.Series:
-        for i, value in enumerate(y.unique()):  # type: ignore
+        for i, value in enumerate(y.unique()):
             self.map_dict[value] = i
             self.unmap_dict[i] = value
 
-        return y.map(self.map_dict)  # type: ignore
+        return y.map(self.map_dict)
+
+    def _prepare_dataset_attributes(self, x: pd.DataFrame, y_mapped: pd.Series) -> None:
+        self.no_attributes = len(x.columns)
+        self.domains = [(x[attr].min(), x[attr].max())
+                        for attr in x.columns]
+        self.no_classes = y_mapped.nunique()
 
     def fit(self, x: pd.DataFrame, y: pd.Series, early_stop_iterations: int = 50) -> list[float]:
         y_mapped = self._map_target(y)
 
         iter = 0
-        self.no_attributes = len(x.columns)
-        self.domains = [(x[attr].min(), x[attr].max())  # type: ignore
-                        for attr in x.columns]
-        self.no_classes = y_mapped.nunique()
+        self._prepare_dataset_attributes(x, y_mapped)
         candidate_scores = []
 
         population = self._init_population(x, y_mapped)

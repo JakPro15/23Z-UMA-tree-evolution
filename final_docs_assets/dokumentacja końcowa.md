@@ -28,11 +28,11 @@ Z takich drzew składa się populacja w zaimplementowanym przez nas algorytmie e
 
 #### Inicjalizacja populacji\
 Każdy węzeł każdego drzewa w populacji startowej jest generowany następująco:\
-Jeżeli osiągnięto maksymalną głębokość drzewa lub z prawdopodobieństwem ```leaf_probability(depth)``` węzeł będzie liściem.\
-Jeżeli węzeł jest liściem, przypisywana jest mu klasa odpowiadająca klasie większościowej (najliczniejsza) z części zbioru danych, która trafia do tego liścia.\
+Jeżeli osiągnięto maksymalną głębokość drzewa, lub z prawdopodobieństwem ```leaf_probability(depth)```, węzeł będzie liściem.\
+Jeżeli węzeł jest liściem, przypisywana jest mu klasa odpowiadająca klasie większościowej (w przypadku wieloklasowym - najliczniejszej) z części zbioru danych, która trafia do tego liścia.\
 Jeżeli w tym podzbiorze jest kilka równolicznych najliczniejszych klas, wybierana jest losowa z nich.\
 Jeżeli do tego liścia nie trafia ani jeden przykład ze zbioru danych, klasa jest losowana.\
-Jeżeli węzeł nie jest liściem, losowany jest atrybut, według którego następuje podział. Następnie, granica podziału jest losowana z dziedziny tego atrybutu. Dzieci tego węzła są generowane rekurencyjnie; zbiór danych otrzymany przez ten węzeł jest dzielony według wylosowanego atrybutu i granicy podziału i podzbiory są przekazywane dzieciom.\
+Jeżeli węzeł nie jest liściem, losowany jest atrybut, według którego następuje podział. Następnie, granica podziału jest losowana z dziedziny tego atrybutu. Dzieci tego węzła są generowane rekurencyjnie; zbiór danych otrzymany przez ten węzeł jest dzielony według wylosowanego atrybutu i granicy podziału, i podzbiory są przekazywane dzieciom.\
 Jeżeli zdarzy się sytuacja, że oboje dzieci danego węzła to liście z tą samą klasą, klasa prawego dziecka jest zmieniana na inną, losową.
 
 W dokumentacji wstępnej klasa liścia miała być losowa, a nie większościowa - zostało to zmienione zgodnie z uwagą z maila.
@@ -44,7 +44,7 @@ Wykonaliśmy eksperymenty z użyciem 4 wariantów reprodukcji: proporcjonalnej, 
 
 #### Mutacja\
 Mutacja polega na wylosowaniu jednego spośród węzłów drzewa. Z prawdopodobieństwem ```leaf_inner_swap_probability``` jest on zamieniany z liścia na węzeł wewnętrzny lub odwrotnie.\
-Przy zmianie z liścia na węzeł wewnętrzny, atrybut, granica podziału i dzieci są generowane tak, jak w przypadku inicjalizacji, z tym, że dzieci zawsze będą liśćmi.\
+Przy zmianie z liścia na węzeł wewnętrzny, atrybut, granica podziału i dzieci są generowane tak, jak w przypadku inicjalizacji, z tym, że dzieci zawsze będą liśćmi. Zamiana nie ma skutku, jeżeli drzewo przekroczyłoby maksymalną głębokość.\
 Przy zmianie z węzła wewnętrznego na liść, klasa nowego liścia jest ustalana na losową spośród najliczniejszych klas wśród liści poddrzewa, którego korzeniem jest mutowany węzeł. Poddrzewo to jest odrzucane.\
 Jeżeli nie zachodzi taka zamiana i węzeł jest liściem, to jego klasa jest zmieniana na losową inną. Jeżeli jest ona taka sama, jak klasa drugiego liścia z tym samym rodzicem, to rodzic jest zamieniany w liść z klasą taką, jaką miały jego dzieci.\
 Jeżeli nie zachodzi taka zamiana i węzeł jest węzłem wewnętrznym, to jego atrybut jest zmieniany na losowy, a granica podziału jest ponownie losowana z dziedziny nowo wylosowanego atrybutu.
@@ -143,7 +143,7 @@ Wyniki uzyskane przez nasz algorytm porównujemy z wynikami istniejącej impleme
 
 ### 3. Poprawność implementacji
 
-W celu weryfikacji poprawności implementacji algorytmu, przygotowaliśmy testy jednostkowe do jego części składowych niezawierających losowości. Są one zawarte w plikach test_tree.py oraz test_genetic_operations.py. Ponadto, sprawdziliśmy poprawność inicjalizacji drzewa oraz reprodukcji w pliku manual_testing.ipynb - dla inicjalizacji wypisujemy wygenerowane drzewo, a dla reprodukcji rysujemy histogram przybliżający, jak zostają wybrane osobniki w każdej z reprodukcji.
+W celu weryfikacji poprawności implementacji algorytmu, przygotowaliśmy testy jednostkowe do jego części składowych niezawierających losowości. Są one zawarte w plikach test_tree.py, test_genetic_operations.py oraz test_succession.py. Ponadto, sprawdziliśmy poprawność inicjalizacji drzewa oraz reprodukcji w pliku manual_testing.ipynb - dla inicjalizacji wypisujemy wygenerowane drzewo, a dla reprodukcji rysujemy histogram przybliżający, jak zostają wybrane osobniki w każdej z reprodukcji.
 
 Poprawność całości implementacji algorytmu pokazuje porównanie z wynikami algorytmu ID3, zawarte w poniższej sekcji.
 
@@ -177,7 +177,7 @@ Eksperyment został wykonany dla wszystkich $5$ zbiorów danych. Z ich wszystkic
 ![](plots/max_depth_wine_stripplot.png){ width=370px } ![](plots/max_depth_wine_boxplot.png){ width=370px }\
 ![](plots/max_depth_high_diamond_ranked_10min_stripplot.png){ width=370px } ![](plots/max_depth_high_diamond_ranked_10min_boxplot.png){ width=370px }\
 
-Jak widać na wykresach, wartość hiperparametru ```max_depth``` nie wpłynęła znacząco na wyniki algorytmu. Dla zbiorów danych ```glass_identification``` uzyskano nawet pojedyncze znacząco lepsze wartości dla ```max_depth = 5```. Oznacza to, że w ogólności lepsze są niższe wartości ```max_depth``` - skoro płytsze drzewa wystarczają, to nie ma sensu próbować konstruować głębszych, dla których operacje (w szczególności predykcja) są wolniejsze.
+Jak widać na wykresach, wartość hiperparametru ```max_depth``` nie wpłynęła znacząco na wyniki algorytmu. Dla zbioru danych ```glass_identification``` uzyskano nawet zauważalnie lepsze wartości dla ```max_depth = 5```, dla niektórych kombinacji hiperparametrów. Oznacza to, że w ogólności lepsze są niższe wartości ```max_depth``` - skoro płytsze drzewa wystarczają, to nie ma sensu próbować konstruować głębszych, dla których operacje (w szczególności predykcja) są wolniejsze, i występuje większe ryzyko nadmiernego dopasowania.
 
 #### Wpływ hiperparametru ```reproduction``` na działanie algorytmu\
 
@@ -187,7 +187,7 @@ Jak widać na wykresach, wartość hiperparametru ```max_depth``` nie wpłynęł
 ![](plots/reproduction_wine_stripplot.png){ width=370px } ![](plots/reproduction_wine_boxplot.png){ width=370px }\
 ![](plots/reproduction_high_diamond_ranked_10min_stripplot.png){ width=370px } ![](plots/reproduction_high_diamond_ranked_10min_boxplot.png){ width=370px }\
 
-Dla wszystkich zbiorów danych reprodukcja turniejowa (z rozmiarem turnieju $2$) okazała się być najlepsza. Jednakże, dla zbioru danych ```high_diamond_ranked_10min``` reprodukcja proporcjonalna okazała się być niemal równie dobra - najprawdopodobniej dla funkcji celu innych niż dokładność (sensowne drzewa mają dokładności z przedziału $0{,}5$-$0{,}8$, więc reprodukcja proporcjonalna może mieć problemy z rozróżnieniem lepszych drzew od średnio dobrych), lub dla innych zbiorów danych, mogłaby ona osiągnąć wyniki lepsze niż reprodukcja turniejowa.
+Dla wszystkich zbiorów danych reprodukcja turniejowa (z rozmiarem turnieju $2$) okazała się być najlepsza. Jednakże, dla zbioru danych ```high_diamond_ranked_10min``` reprodukcja proporcjonalna okazała się być niemal równie dobra - najprawdopodobniej dla funkcji celu innych niż dokładność (sensowne drzewa, w przypadku dwuklasowym, mają dokładności z przedziału $0{,}5$-$0{,}8$, więc reprodukcja proporcjonalna może mieć problemy z rozróżnieniem lepszych drzew od średnio dobrych), lub dla innych zbiorów danych, mogłaby ona osiągnąć wyniki lepsze niż reprodukcja turniejowa.
 
 #### Wpływ hiperparametru ```mutation_probability``` na działanie algorytmu\
 
@@ -207,7 +207,7 @@ Przeprowadziliśmy dodatkowe eksperymenty dla ```mutation_probability = 1,0```. 
         $0{,}8$              $0{,}92\pm 0{,}02$   $0{,}73\pm 0{,}08$   **0,57±0,10**        $0{,}87\pm 0{,}06$   $0{,}72\pm 0{,}01$
         $1{,}0$              $0{,}92\pm 0{,}02$   **0,74±0,08**        $0{,}56\pm 0{,}10$   $0{,}88\pm 0{,}06$   $0{,}72\pm 0{,}01$
 
-Jak widać, zwiększenie prawdopodobieństwa mutacji do maksymalnej wartości nie polepszyło znacząco wyników. Algorytm działa lepiej, jeżeli do etapu krzyżowania i sukcesji dojdą jakieś niezmutowane drzewa.
+Jak widać, zwiększenie prawdopodobieństwa mutacji do maksymalnej wartości nie polepszyło znacząco wyników.
 
 #### Wpływ hiperparametru ```leaf_inner_swap_probability``` na działanie algorytmu\
 
@@ -217,7 +217,7 @@ Jak widać, zwiększenie prawdopodobieństwa mutacji do maksymalnej wartości ni
 ![](plots/leaf_inner_swap_probability_wine_stripplot.png){ width=370px } ![](plots/leaf_inner_swap_probability_wine_boxplot.png){ width=370px }\
 ![](plots/leaf_inner_swap_probability_high_diamond_ranked_10min_stripplot.png){ width=370px } ![](plots/leaf_inner_swap_probability_high_diamond_ranked_10min_boxplot.png){ width=370px }\
 
-Obecność zamiany liścia w węzeł wewnętrzny lub odwrotnie zdecydowanie poprawia wyniki algorytmu. Wyjątkiem jest najlepsza kombinacja hiperparametrów dla zbioru ```wine```, ale nawet na tym zbiorze wyniki dla większości innych kombinacji hiperparametrów są lepsze. Dla zbioru danych ```high_diamond_ranked_10min``` poprawa jest drastyczna. Mutacja bez takiej zamiany (poza przypadkiem powstania dwóch sąsiednich liści z tą samą klasą) nie zmienia struktury drzewa, a tylko parametry pojedynczego węzła. Jeżeli ```leaf_inner_swap_probability``` wynosi $0$, to eksplorację w dziedzinie struktury drzewa musi wykonywać krzyżowanie. Krzyżowanie jednak okazało się niewystarczające.
+Obecność zamiany liścia w węzeł wewnętrzny, lub odwrotnie, zdecydowanie poprawia wyniki algorytmu. Wyjątkiem jest najlepsza kombinacja hiperparametrów dla zbioru ```wine```, ale nawet na tym zbiorze wyniki dla większości innych kombinacji hiperparametrów są lepsze. Dla zbioru danych ```high_diamond_ranked_10min``` poprawa jest drastyczna. Mutacja bez takiej zamiany (poza przypadkiem powstania dwóch sąsiednich liści z tą samą klasą) nie zmienia struktury drzewa, a tylko parametry pojedynczego węzła. Jeżeli ```leaf_inner_swap_probability``` wynosi $0$, to eksplorację w dziedzinie struktury drzewa musi wykonywać krzyżowanie. Krzyżowanie jednak okazało się niewystarczające.
 
 Przeprowadziliśmy dodatkowe eksperymenty dla ```leaf_inner_swap_probability = 0,6```. Wyniki w poniższej tabeli to zagregowane dokładności z $25$-krotnie powtórzonej $5$-krotnej walidacji krzyżowej (używany był zbiór bez zbioru testowego) na różnych zbiorach danych, w formacie średnia ± odchylenie standardowe. Wartości pozostałych hiperparametrów były takie, jak dla najlepszej kombinacji hiperparametrów dla danego zbioru danych.
 
@@ -260,7 +260,7 @@ Przeprowadziliśmy dodatkowe eksperymenty dla rozmiaru elity równego $1$ oraz $
         $2$                      $0{,}92\pm 0{,}02$   $0{,}73\pm 0{,}08$   **0,57±0,10**        **0,88±0,06**        $0{,}72\pm 0{,}01$
         $3$                      $0{,}92\pm 0{,}02$   **0,75±0,07**        $0{,}56\pm 0{,}09$   $0{,}87\pm 0{,}06$   $0{,}72\pm 0{,}00$
 
-Jak widać, wzrost rozmiaru elity nie zwiększa znacząco efektywności algorytmu. Znacząca poprawa jakości następuje tylko przy zmianie z sukcesji generacyjnej na elitarną z rozmiarem elity $1, z wyjątkiem zbiorów danych breast_cancer_wisconsin_diagnostic oraz high_diamond_ranked_10min. Są to jedyne zbiory dwuklasowe - możliwe, że dla zbiorów wieloklasowych mutacja częściej pogarsza niż poprawia drzewo i elita jest bardziej potrzebna.
+Jak widać, wzrost rozmiaru elity nie zwiększa znacząco efektywności algorytmu. Znacząca poprawa jakości następuje tylko przy zmianie z sukcesji generacyjnej na elitarną z rozmiarem elity $1$, z wyjątkiem zbiorów danych breast_cancer_wisconsin_diagnostic oraz high_diamond_ranked_10min. Są to jedyne zbiory dwuklasowe - możliwe, że dla zbiorów wieloklasowych mutacja częściej pogarsza niż poprawia drzewo (bo losowa zmiana klasy rzadziej trafi na dobrą) i elita jest bardziej potrzebna.
 
 #### Najlepsze zestawy hiperparametrów\
 Wyniki w poniższej tabeli to dokładności na zbiorze walidacyjnym, zagregowane z 25-krotnie powtórzonej 5-krotnej walidacji krzyżowej, dla najlepszych (o najlepszej średniej dokładności) zestawów hiperparametrów dla każdego ze zbiorów danych.
@@ -302,11 +302,11 @@ Wyniki algorytmu są praktycznie takie same dla zbiorów treningowego i testoweg
 #### Porównanie z algorytmem ID3\
 Skrypt wykonujący poniższy eksperyment jest zawarty w pliku comparison_experiment.py.
 
-Wykonaliśmy analogiczne przeszukiwanie po hipersiatce hiperparametrów dla metody referencyjnej - algorytmu ID3. Sprawdzane były następujące wartości hiperparametrów:
+Wykonaliśmy analogiczne przeszukiwanie po hipersiatce hiperparametrów dla metody referencyjnej - algorytmu ID3. Sprawdzane były następujące wartości hiperparametrów:\
 - ```max_depth``` - maksymalna głębokość drzewa w populacji - wartości $5$ oraz $20$;\
 - ```min_samples_split``` - minimalna liczba przykładów w węźle niezbędna, aby rozważany był dalszy jego podział - wartości $1$, $2$ i $10$;\
 - ```prune``` - czy wykonywane będzie przycinanie drzewa - wartości *True* oraz *False*;\
-- ```gain_ratio``` - czy używane będzie ```gain ratio``` zamiast ```information gain``` do wyboru podziały węzła - wartości *True* oraz *False*;\
+- ```gain_ratio``` - czy używane będzie ```gain ratio``` zamiast ```information gain``` do wyboru podziału węzła - wartości *True* oraz *False*;\
 - ```min_entropy_decrease``` - minimalna wartość entropii, przy której wykonywany jest dalszy podział węzła - wartości $0$ oraz $0{,}3$;\
 - ```repeating``` - czy będą wykonywane wielokrotne podziały po tym samym atrybucie - wartości *True* oraz *False*.
 
