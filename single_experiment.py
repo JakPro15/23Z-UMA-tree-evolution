@@ -1,10 +1,10 @@
 # Authors: Paweł Kochański, Jakub Proboszcz
-# Written as a part of project in course UMA in semester 23z
+# Written as a part of project in course UMA in semester 23Z
 
 from evo_tree import EvoTree
 from random import seed
-from experiments_evotree import POPULATION_SIZE, MAX_ITERATIONS, leaf_probability, RANDOM_STATE
-from helpers import cross_validate
+from experiments_evotree import POPULATION_SIZE, MAX_ITERATIONS, leaf_probability
+from helpers import cross_validate, RANDOM_STATE
 from reproduction import *
 from succession import *
 from helpers import extract_data_uciml

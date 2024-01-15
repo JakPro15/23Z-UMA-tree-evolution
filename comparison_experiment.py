@@ -1,5 +1,5 @@
 # Authors: Paweł Kochański, Jakub Proboszcz
-# Written as a part of project in course UMA in semester 23z
+# Written as a part of project in course UMA in semester 23Z
 
 from helpers import prepare_datasets
 from random import seed

@@ -1,5 +1,5 @@
 # Authors: Paweł Kochański, Jakub Proboszcz
-# Written as a part of project in course UMA in semester 23z
+# Written as a part of project in course UMA in semester 23Z
 
 import succession
 from tree import DecisionTree, LeafNode

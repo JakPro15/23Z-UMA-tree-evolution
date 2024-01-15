@@ -1,5 +1,5 @@
 # Authors: Paweł Kochański, Jakub Proboszcz
-# Written as a part of project in course UMA in semester 23z
+# Written as a part of project in course UMA in semester 23Z
 
 from tree import init_tree, DecisionTree, print_tree
 from typing import Callable, Any, Union
