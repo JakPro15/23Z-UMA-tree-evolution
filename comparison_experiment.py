@@ -12,6 +12,7 @@ import sys
 sys.modules['sklearn.externals.six'] = six
 import numpy as np
 np.float = float
+# necessary for id3 library to function
 from id3 import Id3Estimator
 from evo_tree import EvoTree
 
