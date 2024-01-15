@@ -7,7 +7,6 @@ from abc import ABC, abstractmethod
 from random import random, randint, choice, uniform
 from collections import deque
 import pandas as pd
-import numpy as np
 
 
 class SubtreeIterator:
