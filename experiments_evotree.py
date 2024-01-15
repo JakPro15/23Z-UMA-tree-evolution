@@ -1,3 +1,6 @@
+# Authors: Paweł Kochański, Jakub Proboszcz
+# Written as a part of project in course UMA in semester 23z
+
 from evo_tree import EvoTree
 from random import seed
 from helpers import cross_validate, prepare_datasets

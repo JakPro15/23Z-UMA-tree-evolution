@@ -1,3 +1,6 @@
+# Authors: Paweł Kochański, Jakub Proboszcz
+# Written as a part of project in course UMA in semester 23z
+
 from helpers import prepare_datasets
 from random import seed
 from reproduction import tournament_reproduction
@@ -15,6 +18,7 @@ np.float = float
 # necessary for id3 library to function
 from id3 import Id3Estimator
 from evo_tree import EvoTree
+
 
 
 # Script executes comparison of tree evolution and ID3 algorithms with their best hyperparameter values,

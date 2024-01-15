@@ -1,3 +1,6 @@
+# Authors: Paweł Kochański, Jakub Proboszcz
+# Written as a part of project in course UMA in semester 23z
+
 from tree import init_tree, DecisionTree, print_tree
 from typing import Callable, Any, Union
 from genetic_operations import do_mutation, do_crossover

@@ -1,3 +1,6 @@
+# Authors: Paweł Kochański, Jakub Proboszcz
+# Written as a part of project in course UMA in semester 23z
+
 from __future__ import annotations
 from typing import Callable, TYPE_CHECKING, overload
 from typing_extensions import Self

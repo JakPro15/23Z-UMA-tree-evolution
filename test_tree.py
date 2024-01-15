@@ -1,3 +1,6 @@
+# Authors: Paweł Kochański, Jakub Proboszcz
+# Written as a part of project in course UMA in semester 23z
+
 from tree import LeafNode, InnerNode, DecisionTree, print_tree
 from io import StringIO
 import pandas as pd

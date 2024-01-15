@@ -1,3 +1,7 @@
+# Authors: Paweł Kochański, Jakub Proboszcz
+# Written as a part of project in course UMA in semester 23z
+
+from evo_tree import EvoTree
 import pandas as pd
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score

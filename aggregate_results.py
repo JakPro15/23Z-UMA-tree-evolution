@@ -1,3 +1,6 @@
+# Authors: Paweł Kochański, Jakub Proboszcz
+# Written as a part of project in course UMA in semester 23z
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt

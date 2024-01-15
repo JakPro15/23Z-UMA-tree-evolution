@@ -1,3 +1,6 @@
+# Authors: Paweł Kochański, Jakub Proboszcz
+# Written as a part of project in course UMA in semester 23z
+
 from tree import DecisionTree, Node, InnerNode, LeafNode, init_node
 from typing import Any, Union
 from random import random, choice, uniform, shuffle
