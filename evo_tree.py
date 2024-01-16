@@ -37,14 +37,13 @@ class EvoTree:
         self.population = None
         self.no_attributes: int = 0
         self.domains: list[tuple[float, float]] = []
-        self.no_classes: int = 0
         self.map_dict: dict[Any, int] = {}
         self.unmap_dict: dict[int, Any] = {}
         self.tree: Union[DecisionTree, None] = None
 
     def _init_population(self, X_train: pd.DataFrame, y_train: pd.Series) -> list[DecisionTree]:
         return [
-            init_tree(self.max_depth, self.no_attributes, self.domains, self.no_classes,
+            init_tree(self.max_depth, self.no_attributes, self.domains,
                       self.leaf_probability, X_train, y_train) for _ in range(self.pop_size)
         ]
 
@@ -59,7 +58,6 @@ class EvoTree:
         self.no_attributes = len(x.columns)
         self.domains = [(x[attr].min(), x[attr].max())
                         for attr in x.columns]
-        self.no_classes = y_mapped.nunique()
 
     def fit(self, x: pd.DataFrame, y: pd.Series, early_stop_iterations: int = 50) -> list[float]:
         y_mapped = self._map_target(y)
@@ -85,8 +83,7 @@ class EvoTree:
 
             genetic_operations_population = do_crossover(
                 do_mutation(
-                    reproduction_population, self.no_attributes, self.domains,
-                    self.no_classes, self.mutation_probability,
+                    reproduction_population, self.no_attributes, self.domains, self.mutation_probability,
                     self.leaf_inner_swap_probabilty, self.max_depth
                 ),
                 self.crossover_probability, self.max_depth)

@@ -3,42 +3,47 @@
 
 import genetic_operations
 from tree import LeafNode, InnerNode, DecisionTree
-
-
-def test_no_swap_mutation_leaf():
-    leaf = LeafNode(0)
-    tree = DecisionTree(leaf)
-    genetic_operations._do_no_swap_mutation(tree, leaf, 2, [(1, 5), (1, 5)], 2)
-    assert isinstance(tree.root, LeafNode)
-    assert tree.root.leaf_class == 1
-    assert tree.root.parent is None
+import pandas as pd
+from random import seed
 
 
 def test_no_swap_mutation_inner_node():
-    leaf1 = LeafNode(0)
-    leaf2 = LeafNode(1)
-    inner = InnerNode(1, 8.3, (leaf1, leaf2))
+    leaf1 = LeafNode(0, pd.DataFrame([(2, 7)], index=[0], columns=['a', 'b']), pd.Series([0], index=[0]))
+    leaf2 = LeafNode(1, pd.DataFrame([(3, 9)], index=[0], columns=['a', 'b']), pd.Series([1], index=[0]))
+    inner = InnerNode(1, 8.3, (leaf1, leaf2), pd.DataFrame([(2, 7), (3, 9)], index=[0, 1], columns=['a', 'b']),
+                      pd.Series([0, 1], index=[0, 1]))
     tree = DecisionTree(inner)
-    genetic_operations._do_no_swap_mutation(tree, inner, 2, [(1, 5), (6, 10)], 2)
-    assert isinstance(tree.root, InnerNode)
-    assert (tree.root.attribute == 0 and 1 <= tree.root.threshold <= 5) or (tree.root.attribute == 1 and 6 <= tree.root.threshold <= 10)
-    assert tree.root.parent is None
+    genetic_operations._do_no_swap_mutation(tree, inner, 2, [(1, 5), (6, 10)])
+    if isinstance(tree.root, InnerNode):
+        assert (tree.root.attribute == 0 and 1 <= tree.root.threshold <= 5) or \
+               (tree.root.attribute == 1 and 6 <= tree.root.threshold <= 10)
+        assert tree.root.parent is None
+    else:
+        assert tree.root.leaf_class in {0, 1}
+        assert tree.root.X_train.equals(inner.X_train)
+        assert tree.root.y_train.equals(inner.y_train)
 
 
 def test_swap_mutation_leaf():
-    leaf = LeafNode(0)
+    leaf = LeafNode(0, pd.DataFrame([(2, 7), (3, 9)], index=[0, 1], columns=['a', 'b']),
+                    pd.Series([0, 1], index=[0, 1]))
     tree = DecisionTree(leaf)
-    genetic_operations._do_leaf_inner_swap(tree, leaf, 2, [(1, 5), (6, 10)], 2, 3)
-    assert isinstance(tree.root, InnerNode)
-    assert (tree.root.attribute == 0 and 1 <= tree.root.threshold <= 5) or (tree.root.attribute == 1 and 6 <= tree.root.threshold <= 10)
-    assert isinstance(tree.root.children[0], LeafNode)
-    assert isinstance(tree.root.children[1], LeafNode)
-    assert tree.root.children[0].leaf_class in {0, 1}
-    assert tree.root.children[1].leaf_class in {0, 1}
-    assert tree.root.children[0].leaf_class != tree.root.children[1].leaf_class
-    assert tree.root.children[0].parent == tree.root
-    assert tree.root.children[1].parent == tree.root
-    assert tree.root.parent is None
+    genetic_operations._do_leaf_inner_swap(tree, leaf, 2, [(1, 5), (6, 10)], 3)
+    if isinstance(tree.root, InnerNode):
+        assert (tree.root.attribute == 0 and 1 <= tree.root.threshold <= 5) or \
+               (tree.root.attribute == 1 and 6 <= tree.root.threshold <= 10)
+        assert isinstance(tree.root.children[0], LeafNode)
+        assert isinstance(tree.root.children[1], LeafNode)
+        assert tree.root.children[0].leaf_class in {0, 1}
+        assert tree.root.children[1].leaf_class in {0, 1}
+        assert tree.root.children[0].leaf_class != tree.root.children[1].leaf_class
+        assert tree.root.children[0].parent == tree.root
+        assert tree.root.children[1].parent == tree.root
+        assert tree.root.parent is None
+    else:
+        assert tree.root.leaf_class in {0, 1}
+        assert tree.root.X_train.equals(leaf.X_train)
+        assert tree.root.y_train.equals(leaf.y_train)
 
 
 def test_swap_mutation_leaf_max_depth():
@@ -46,7 +51,7 @@ def test_swap_mutation_leaf_max_depth():
     leaf2 = LeafNode(1)
     inner = InnerNode(1, 8.3, (leaf1, leaf2))
     tree = DecisionTree(inner)
-    genetic_operations._do_leaf_inner_swap(tree, leaf1, 2, [(1, 5), (6, 10)], 2, 1)
+    genetic_operations._do_leaf_inner_swap(tree, leaf1, 2, [(1, 5), (6, 10)], 1)
     assert isinstance(tree.root, InnerNode)
     assert tree.root.attribute == 1
     assert tree.root.threshold == 8.3
@@ -64,11 +69,12 @@ def test_swap_mutation_inner_node():
     leaf2 = LeafNode(1)
     leaf3 = LeafNode(1)
     inner1 = InnerNode(0, 3.3, (leaf1, leaf2))
-    inner2 = InnerNode(1, 8.3, (inner1, leaf3))
+    inner2 = InnerNode(1, 8.3, (inner1, leaf3), pd.DataFrame([(2, 7), (3, 9), (1, 6)], index=[0, 1, 2], columns=['a', 'b']),
+                       pd.Series([0, 1, 1], index=[0, 1, 2]))
     tree = DecisionTree(inner2)
-    genetic_operations._do_leaf_inner_swap(tree, inner2, 2, [(1, 5), (6, 10)], 2, 3)
+    genetic_operations._do_leaf_inner_swap(tree, inner2, 2, [(1, 5), (6, 10)], 3)
     assert isinstance(tree.root, LeafNode)
-    assert tree.root.leaf_class == 1  # majority class of leaves in subtree
+    assert tree.root.leaf_class == 1
     assert tree.root.parent is None
 
 
