@@ -2,8 +2,9 @@
 # Written as a part of project in course UMA in semester 23Z
 
 import genetic_operations
-from tree import LeafNode, InnerNode, DecisionTree
+from tree import LeafNode, InnerNode, DecisionTree, init_tree
 import pandas as pd
+from sklearn.datasets import make_classification
 from random import seed
 
 
@@ -104,32 +105,61 @@ def test_crossover_swap():
 
 
 def test_check_max_depth():
-    leaf1 = LeafNode(0)
-    leaf2 = LeafNode(1)
-    leaf3 = LeafNode(1)
-    inner1 = InnerNode(0, 3.3, (leaf1, leaf2))
-    inner2 = InnerNode(1, 8.3, (inner1, leaf3))
-    tree1 = DecisionTree(inner2)
+    seed(0)
+    X_train, y_train = make_classification(200, 10, random_state=42, n_classes=10,
+                                           n_informative=10, n_redundant=0, n_repeated=0)
+    X_train = pd.DataFrame(X_train, index=list(range(200)), columns=list(range(10)))
+    y_train = pd.Series(y_train, index=list(range(200)))
+    domains = [(X_train.iloc[:, i].min(), X_train.iloc[:, i].max()) for i in range(10)]
 
-    leaf4 = LeafNode(1)
-    leaf5 = LeafNode(0)
-    inner3 = InnerNode(0, 2.6, (leaf4, leaf5))
-    tree2 = DecisionTree(inner3)
+    parent1 = init_tree(2, 10, domains, lambda _: 0, X_train, y_train)
+    parent2 = init_tree(2, 10, domains, lambda _: 0, X_train, y_train)
+    child1 = init_tree(4, 10, domains, lambda _: 0, X_train, y_train)
+    child2 = init_tree(1, 10, domains, lambda _: 0, X_train, y_train)
 
-    child1 = tree1.copy()
-    child2 = tree2.copy()
-    assert isinstance(child2.root, InnerNode)
-    genetic_operations._do_crossover_swap(child1, child2, child1.root, child2.root.children[0])
+    result1, result2 = genetic_operations._check_max_depth(parent1, parent2, child1, child2, 2)
+    assert result1 != child1
+    if isinstance(result1.root, InnerNode) and isinstance(parent1.root, InnerNode):
+        assert result1.root.attribute == parent1.root.attribute
+        assert result1.root.threshold == parent1.root.threshold
+    elif isinstance(result1.root, LeafNode) and isinstance(parent1.root, LeafNode):
+        assert result1.root.leaf_class == parent1.root.leaf_class
+    else:
+        raise AssertionError
 
-    result1, result2 = genetic_operations._check_max_depth(tree1, tree2, child1, child2, 2)
-    assert result1 == child1
-    assert result2 != child2
-    assert isinstance(result2.root, InnerNode)
-    assert result2.root.attribute == 0
-    assert result2.root.threshold == 2.6
-    assert isinstance(result2.root.children[0], LeafNode)
-    assert isinstance(result2.root.children[1], LeafNode)
-    assert result2.root.children[0].leaf_class == 1
-    assert result2.root.children[1].leaf_class == 0
-    assert result2.root.children[0].parent == result2.root
-    assert result2.root.children[1].parent == result2.root
+    assert result2 == child2
+
+
+def check_consistency(tree: DecisionTree):
+    for node in tree.nodes():
+        if isinstance(node, LeafNode):
+            assert node.leaf_class in node.y_train.mode().values
+        elif isinstance(node, InnerNode):
+            mask = node.X_train.iloc[:, node.attribute] < node.threshold
+            assert node.children[0].X_train.equals(node.X_train[mask])
+            assert node.children[0].y_train.equals(node.y_train[mask])
+            assert node.children[1].X_train.equals(node.X_train[~mask])
+            assert node.children[1].y_train.equals(node.y_train[~mask])
+
+
+def test_consistency():
+    # Checks whether with a random dataset the tree leaf classes will be properly calculated.
+    X_train, y_train = make_classification(200, 10, random_state=42)
+    X_train = pd.DataFrame(X_train, index=list(range(200)), columns=list(range(10)))
+    y_train = pd.Series(y_train, index=list(range(200)))
+    domains = [(X_train.iloc[:, i].min(), X_train.iloc[:, i].max()) for i in range(10)]
+    for _ in range(100):
+        tree = init_tree(10, 5, domains, lambda _: 0.1, X_train, y_train)
+        check_consistency(tree)
+
+        tree2 = tree.copy()
+        genetic_operations.mutate_tree(tree2, 10, domains, 1, 0, 10)
+        check_consistency(tree2)
+
+        tree3 = tree.copy()
+        genetic_operations.mutate_tree(tree3, 10, domains, 1, 1, 10)
+        check_consistency(tree3)
+
+        tree4, tree5 = genetic_operations.crossover_trees(tree, tree3, 1, 10)
+        check_consistency(tree4)
+        check_consistency(tree5)

@@ -27,7 +27,7 @@ def _replace_child(tree: DecisionTree, parent: Union[InnerNode, None], old_child
 def _attempt_rollup(tree: DecisionTree, node: InnerNode) -> None:
     if isinstance(node.children[0], LeafNode) and isinstance(node.children[1], LeafNode) and \
             node.children[0].leaf_class == node.children[1].leaf_class:
-        new_node = LeafNode(node.children[0].leaf_class)
+        new_node = LeafNode(node.children[0].leaf_class, node.X_train, node.y_train)
         _replace_child(tree, node.parent, node, new_node)
 
 
@@ -62,11 +62,13 @@ def mutate_tree(tree: DecisionTree, no_attributes: int, domains: list[tuple[floa
     if not random() < mutation_probability:
         return
     if random() < leaf_inner_swap_probability:
-        mutated_node = choice(tree.nodes())
+        mutated_node = choice(list(tree.nodes()))
         _do_leaf_inner_swap(tree, mutated_node, no_attributes, domains, max_depth)
     else:
-        mutated_node = choice([node for node in tree.nodes()
-                               if isinstance(node, InnerNode)])
+        nodes_to_mutate = [node for node in tree.nodes() if isinstance(node, InnerNode)]
+        if(len(nodes_to_mutate)) == 0:
+            return
+        mutated_node = choice(nodes_to_mutate)
         _do_no_swap_mutation(tree, mutated_node, no_attributes, domains)
 
 
@@ -79,6 +81,10 @@ def _do_crossover_swap(child1: DecisionTree, child2: DecisionTree, swapped_root1
 
     swapped_root1.X_train, swapped_root2.X_train = swapped_root2.X_train, swapped_root1.X_train
     swapped_root1.y_train, swapped_root2.y_train = swapped_root2.y_train, swapped_root1.y_train
+
+    if swapped_root1.X_train is not None: # to allow testing crossover without recalculation
+        _recalculate_node(child1, swapped_root2)
+        _recalculate_node(child2, swapped_root1)
 
     if isinstance(swapped_root2, LeafNode) and swapped_parent1 is not None:
         _attempt_rollup(child1, swapped_parent1)
@@ -105,8 +111,6 @@ def crossover_trees(parent1: DecisionTree, parent2: DecisionTree, crossover_prob
     swapped_root1 = choice(list(child1.nodes()))
     swapped_root2 = choice(list(child2.nodes()))
     _do_crossover_swap(child1, child2, swapped_root1, swapped_root2)
-    _recalculate_node(child1, swapped_root2)
-    _recalculate_node(child2, swapped_root1)
     return _check_max_depth(parent1, parent2, child1, child2, max_depth)
 
 

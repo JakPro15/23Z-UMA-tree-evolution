@@ -101,7 +101,15 @@ class InnerNode(Node):
             return self.children[1].predict(x)
 
     def copy(self) -> InnerNode:
-        return InnerNode(self.attribute, self.threshold, (self.children[0].copy(), self.children[1].copy()), self.parent)
+        if self.X_train is None:
+            copied = InnerNode(self.attribute, self.threshold, (self.children[0].copy(), self.children[1].copy()),
+                               None, None)
+        else:
+            copied = InnerNode(self.attribute, self.threshold, (self.children[0].copy(), self.children[1].copy()),
+                               self.X_train.copy(), self.y_train.copy())
+        copied.children[0].parent = copied
+        copied.children[1].parent = copied
+        return copied
 
     def recalculate(self) -> bool:
         mask = self.X_train.iloc[:, self.attribute] < self.threshold
@@ -144,7 +152,10 @@ class LeafNode(Node):
         return self.leaf_class
 
     def copy(self) -> LeafNode:
-        return LeafNode(self.leaf_class, self.parent)
+        if self.X_train is None:
+            return LeafNode(self.leaf_class, None, None, self.parent)
+        else:
+            return LeafNode(self.leaf_class, self.X_train.copy(), self.y_train.copy(), self.parent)
 
     def recalculate(self) -> bool:
         self.leaf_class = choice(self.y_train.mode().to_numpy())
