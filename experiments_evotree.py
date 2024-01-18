@@ -22,7 +22,7 @@ def leaf_probability(depth):
 reproductions = [
     proportional_reproduction,
     lambda population, fitnesses: rank_reproduction(
-        population, fitnesses, 0.05, get_k_from_a(0.05, POPULATION_SIZE)),
+        population, fitnesses, 0.01, get_k_from_a(0.01, POPULATION_SIZE)),
     lambda population, fitnesses: truncation_reproduction(
         population, fitnesses, 0.8),
     lambda population, fitnesses: tournament_reproduction(
@@ -37,7 +37,7 @@ successions = [
 
 
 def run_experiment(name, data, counters, file_lengths):
-    for seed_nr in range(25):
+    for seed_nr in range(5):
         for max_depth in [5, 20]:
             for j, reproduction in enumerate(reproductions):
                 for mutation_probability in [0.4, 0.8]:

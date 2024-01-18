@@ -31,8 +31,6 @@ class SubtreeIterator:
 
 class Node(ABC):
     parent: InnerNode | None
-    X_train: pd.DataFrame
-    y_train: pd.DataFrame
 
     @abstractmethod
     @overload
@@ -72,15 +70,12 @@ class Node(ABC):
 
 
 class InnerNode(Node):
-    def __init__(self, attribute: int, threshold: float, children: tuple[Node, Node],
-                 X_train: pd.DataFrame = None, y_train: pd.DataFrame = None, parent: InnerNode | None = None) -> None:
+    def __init__(self, attribute: int, threshold: float, children: tuple[Node, Node], parent: InnerNode | None = None) -> None:
         self.attribute = attribute
         self.threshold = threshold
         self.children = children
         self.children[0].parent = self
         self.children[1].parent = self
-        self.X_train = X_train
-        self.y_train = y_train
         self.parent = parent
 
     @overload
@@ -101,41 +96,29 @@ class InnerNode(Node):
             return self.children[1].predict(x)
 
     def copy(self) -> InnerNode:
-        if self.X_train is None:
-            copied = InnerNode(self.attribute, self.threshold, (self.children[0].copy(), self.children[1].copy()),
-                               None, None)
-        else:
-            copied = InnerNode(self.attribute, self.threshold, (self.children[0].copy(), self.children[1].copy()),
-                               self.X_train.copy(), self.y_train.copy())
+        copied = InnerNode(self.attribute, self.threshold, (self.children[0].copy(), self.children[1].copy()))
         copied.children[0].parent = copied
         copied.children[1].parent = copied
         return copied
 
-    def recalculate(self) -> bool:
-        mask = self.X_train.iloc[:, self.attribute] < self.threshold
+    def recalculate(self, X_train: pd.DataFrame, y_train: pd.DataFrame) -> bool:
+        mask = X_train.iloc[:, self.attribute] < self.threshold
         if mask.value_counts().max() == len(mask.index):
             return True
 
-        self.children[0].X_train = self.X_train[mask]
-        self.children[0].y_train = self.y_train[mask]
-        if self.children[0].recalculate():
-            self.children = (LeafNode(None, self.X_train[mask], self.y_train[mask]), self.children[1])
-            self.children[0].recalculate()
+        if self.children[0].recalculate(X_train[mask], y_train[mask]):
+            self.children = (LeafNode(None, self), self.children[1])
+            self.children[0].recalculate(X_train[mask], y_train[mask])
 
-        self.children[1].X_train = self.X_train[~mask]
-        self.children[1].y_train = self.y_train[~mask]
-        if self.children[1].recalculate():
-            self.children = (self.children[0], LeafNode(None, self.X_train[~mask], self.y_train[~mask]))
-            self.children[1].recalculate()
+        if self.children[1].recalculate(X_train[~mask], y_train[~mask]):
+            self.children = (self.children[0], LeafNode(None, self))
+            self.children[1].recalculate(X_train[~mask], y_train[~mask])
         return False
 
 
 class LeafNode(Node):
-    def __init__(self, leaf_class: int | None, X_train: pd.DataFrame = None,
-                 y_train: pd.DataFrame = None, parent: InnerNode | None = None) -> None:
+    def __init__(self, leaf_class: int | None, parent: InnerNode | None = None) -> None:
         self.leaf_class = leaf_class
-        self.X_train = X_train
-        self.y_train = y_train
         self.parent = parent
 
     @overload
@@ -152,13 +135,10 @@ class LeafNode(Node):
         return self.leaf_class
 
     def copy(self) -> LeafNode:
-        if self.X_train is None:
-            return LeafNode(self.leaf_class, None, None, self.parent)
-        else:
-            return LeafNode(self.leaf_class, self.X_train.copy(), self.y_train.copy(), self.parent)
+        return LeafNode(self.leaf_class, self.parent)
 
-    def recalculate(self) -> bool:
-        self.leaf_class = choice(self.y_train.mode().to_numpy())
+    def recalculate(self, X_train: pd.DataFrame, y_train: pd.DataFrame) -> bool:
+        self.leaf_class = choice(y_train.mode().to_numpy())
         return False
 
 
@@ -169,14 +149,14 @@ def init_node(max_depth: int, no_attributes: int, domains: list[tuple[float, flo
     assert len(y_train.index) > 0
 
     if depth >= max_depth or random() < leaf_probability(depth):
-        return LeafNode(choice(y_train.mode().to_numpy()), X_train, y_train)
+        return LeafNode(choice(y_train.mode().to_numpy()))
 
     split_attribute = randint(0, no_attributes - 1)
     split_threshold = uniform(*domains[split_attribute])
     mask = X_train.iloc[:, split_attribute] < split_threshold
 
     if mask.value_counts().max() == len(mask.index):
-        return LeafNode(choice(y_train.mode().to_numpy()), X_train, y_train)
+        return LeafNode(choice(y_train.mode().to_numpy()))
 
     child_left = init_node(max_depth, no_attributes, domains, leaf_probability,
                            depth + 1, X_train[mask], y_train[mask])
@@ -185,14 +165,16 @@ def init_node(max_depth: int, no_attributes: int, domains: list[tuple[float, flo
 
     if isinstance(child_left, LeafNode) and isinstance(child_right, LeafNode) \
        and child_left.leaf_class == child_right.leaf_class:
-        return LeafNode(choice(y_train.mode().to_numpy()), X_train, y_train)
-    created_node = InnerNode(split_attribute, split_threshold, (child_left, child_right), X_train, y_train, parent)
+        return LeafNode(choice(y_train.mode().to_numpy()))
+    created_node = InnerNode(split_attribute, split_threshold, (child_left, child_right), parent)
     return created_node
 
 
 class DecisionTree:
-    def __init__(self, root: Node) -> None:
+    def __init__(self, root: Node, X_train: pd.DataFrame = None, y_train: pd.DataFrame = None) -> None:
         self.root = root
+        self.X_train = X_train
+        self.y_train = y_train
 
     def nodes(self) -> SubtreeIterator:
         return self.root.subtree_nodes()
@@ -221,12 +203,17 @@ class DecisionTree:
             return self.root.predict(x)
 
     def copy(self) -> DecisionTree:
-        return DecisionTree(self.root.copy())
+        return DecisionTree(self.root.copy(), self.X_train, self.y_train)
+
+    def recalculate(self):
+        if self.root.recalculate(self.X_train, self.y_train):
+            self.root = LeafNode(None, self)
+            self.root.recalculate(self.X_train, self.y_train)
 
 
 def init_tree(max_depth: int, no_attributes: int, domains: list[tuple[float, float]],
               leaf_probability: Callable[[int], float], X_train: pd.DataFrame, y_train: pd.Series[int]) -> DecisionTree:
-    return DecisionTree(init_node(max_depth, no_attributes, domains, leaf_probability, 0, X_train, y_train))
+    return DecisionTree(init_node(max_depth, no_attributes, domains, leaf_probability, 0, X_train, y_train), X_train, y_train)
 
 
 def _format_threshold(threshold: float) -> str:

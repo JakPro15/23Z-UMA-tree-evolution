@@ -77,7 +77,7 @@ class EvoTree:
         candidate_scores.append(best_score)
         prev_score = best_score
 
-        while (iter < self.iter_max):
+        while iter < self.iter_max:
             reproduction_population = self.reproduction(
                 population, scores)
 

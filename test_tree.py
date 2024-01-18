@@ -191,59 +191,31 @@ def test_copy():
 def test_recalculate_no_structure_change():
     X_train = pd.DataFrame([(3, 2), (1, 4), (4, 1)], index=[0, 1, 2], columns=['a', 'b'])
     y_train = pd.Series([0, 0, 1], index=[0, 1, 2])
-    leaf1 = LeafNode(1, pd.DataFrame([(3, 2)], index=[0], columns=['a', 'b']), pd.Series([1], index=[0]))
+    leaf1 = LeafNode(1)
     leaf2 = LeafNode(None)
     leaf3 = LeafNode(None)
     inner = InnerNode(1, 2, children=(leaf2, leaf3))
-    root = InnerNode(0, 2, (leaf1, inner), X_train, y_train)
-    root.recalculate()
+    root = InnerNode(0, 2, (leaf1, inner))
+    root.recalculate(X_train, y_train)
 
     assert leaf1.leaf_class == 0
-    assert leaf1.X_train.values[0][0] == 1
-    assert leaf1.X_train.values[0][1] == 4
-    assert leaf1.y_train.values[0] == 0
-
     assert leaf2.leaf_class == 1
-    assert leaf2.X_train.values[0][0] == 4
-    assert leaf2.X_train.values[0][1] == 1
-    assert leaf2.y_train.values[0] == 1
-
     assert leaf3.leaf_class == 0
-    assert leaf3.X_train.values[0][0] == 3
-    assert leaf3.X_train.values[0][1] == 2
-    assert leaf3.y_train.values[0] == 0
-
-    assert inner.X_train.values[0][0] == 3
-    assert inner.X_train.values[0][1] == 2
-    assert inner.y_train.values[0] == 0
-
-    assert inner.X_train.values[1][0] == 4
-    assert inner.X_train.values[1][1] == 1
-    assert inner.y_train.values[1] == 1
 
 
 def test_recalculate_inner_node_rolled_up():
     X_train = pd.DataFrame([(3, 2), (1, 4), (4, 1)], index=[0, 1, 2], columns=['a', 'b'])
     y_train = pd.Series([0, 0, 1], index=[0, 1, 2])
-    leaf1 = LeafNode(1, pd.DataFrame([(3, 2)], index=[0], columns=['a', 'b']), pd.Series([1], index=[0]))
+    leaf1 = LeafNode(1)
     leaf2 = LeafNode(None)
     leaf3 = LeafNode(None)
     inner = InnerNode(1, 2, children=(leaf2, leaf3))
-    root = InnerNode(0, 4, (leaf1, inner), X_train, y_train)
-    root.recalculate()
+    root = InnerNode(0, 4, (leaf1, inner))
+    root.recalculate(X_train, y_train)
 
     assert leaf1 == root.children[0]
     assert leaf1.leaf_class == 0
-    assert leaf1.X_train.values[0][0] == 3
-    assert leaf1.X_train.values[0][1] == 2
-    assert leaf1.y_train.values[0] == 0
-    assert leaf1.X_train.values[1][0] == 1
-    assert leaf1.X_train.values[1][1] == 4
-    assert leaf1.y_train.values[1] == 0
 
     assert inner != root.children[1]
     assert isinstance(root.children[1], LeafNode)
     assert root.children[1].leaf_class == 1
-    assert root.children[1].X_train.values[0][0] == 4
-    assert root.children[1].X_train.values[0][1] == 1
-    assert root.children[1].y_train.values[0] == 1
