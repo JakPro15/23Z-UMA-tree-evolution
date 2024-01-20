@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     counters = dict([(name, 0) for name in datasets])
     file_lengths = dict([(name, 0) for name in datasets])
-    for name in datasets:
+    for name in file_lengths:
         try:
             file = open(f'./experiment_results/{name}.csv', 'r+')
             file_lengths[name] = sum([1 for _ in file])

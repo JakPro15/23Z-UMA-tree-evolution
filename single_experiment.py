@@ -28,16 +28,17 @@ def load_lol_dataset():
         attrs, target, test_size=0.2, random_state=RANDOM_STATE)
     return (x, y, x_test, y_test)
 
+
 if __name__ == "__main__":
     # reproduction and succession given as strings, so they can be printed
     parameters = dict(
-        dataset_name="lol",
+        dataset_name="wine",
         max_depth=5,
-        reproduction="lambda p, o: tournament_reproduction(p, o, 2)",
-        mutation_probability=0.8,
-        leaf_inner_swap_probabilty=0.3,
-        crossover_probability=0.4,
-        succession="lambda p1, p2, o1, o2: elite_succession(p1, p2, o1, o2, 1)"
+        reproduction="lambda p, o: rank_reproduction(p, o, 0.01, get_k_from_a(0.01, 20))",
+        mutation_probability=0.4,
+        leaf_inner_swap_probabilty=0.9,
+        crossover_probability=0.0,
+        succession="lambda p1, p2, o1, o2: elite_succession(p1, p2, o1, o2, 2)"
     )
     for key, value in parameters.items():
         print(f"{key}: {value}")
@@ -63,7 +64,7 @@ if __name__ == "__main__":
     std_devs = []
     min_scores = []
     max_scores = []
-    for seed_nr in range(25):
+    for i, seed_nr in enumerate([0, 1, 3, 5, 6]):
         seed(seed_nr)
 
         model = EvoTree(
@@ -80,7 +81,7 @@ if __name__ == "__main__":
         std_devs.append(std_dev)
         min_scores.append(min_score)
         max_scores.append(max_score)
-        print(f"\r{seed_nr + 1}/25 done")
+        print(f"\r{i + 1}/5 done")
 
     accuracy = statistics.mean(accuracies)
     std_dev = get_std_dev(accuracy, np.sum(np.array(accuracies) ** 2), np.sum(np.array(std_devs) ** 2))
