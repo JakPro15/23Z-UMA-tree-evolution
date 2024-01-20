@@ -15,6 +15,7 @@ from succession import *
 POPULATION_SIZE = 20
 MAX_ITERATIONS = 500
 
+
 def leaf_probability(depth):
     return 1 - (0.5 ** depth)
 
@@ -37,7 +38,7 @@ successions = [
 
 
 def run_experiment(name, data, counters, file_lengths):
-    for seed_nr in range(5):
+    for seed_nr in [0, 1, 3, 5, 6]:
         for max_depth in [5, 20]:
             for j, reproduction in enumerate(reproductions):
                 for mutation_probability in [0.4, 0.8]:
@@ -63,6 +64,7 @@ def run_experiment(name, data, counters, file_lengths):
                                         f"{crossover_probability},{k},{accuracy},{std_dev},{min_score},{max_score}\n"
                                     )
 
+
 if __name__ == "__main__":
     datasets = prepare_datasets()
 
@@ -79,7 +81,8 @@ if __name__ == "__main__":
     processes = []
 
     for name, data in datasets.items():
-        process = Process(target=run_experiment, args=(name, data, counters, file_lengths))
+        process = Process(target=run_experiment, args=(
+            name, data, counters, file_lengths))
         processes.append(process)
         process.start()
 

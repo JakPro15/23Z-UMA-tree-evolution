@@ -8,7 +8,7 @@ from pytest import approx
 
 
 def test_get_std_dev():
-    populations = [np.random.normal(size=5) for _ in range(25)]
+    populations = [np.random.normal(size=5) for _ in range(5)]
 
     st_devs = [stdev(pop) for pop in populations]
     averages = [mean(pop) for pop in populations]

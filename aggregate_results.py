@@ -16,13 +16,13 @@ from numpy import sqrt
 
 def get_std_dev(average, accuracy_squares_sum, std_dev_squares_sum):
     """
-    Calculates standard deviation of 25 joined samples.
+    Calculates standard deviation of 5 joined samples.
     average is the average value of the resulting sample.
     """
     first_part = 4 * std_dev_squares_sum
-    second_part = 125 * (average ** 2)
+    second_part = 25 * (average ** 2)
     third_part = 5 * accuracy_squares_sum
-    return sqrt((first_part - second_part + third_part) / 124)
+    return sqrt((first_part - second_part + third_part) / 24)
 
 
 def aggregate_data(data: pd.DataFrame) -> pd.DataFrame:
@@ -32,14 +32,14 @@ def aggregate_data(data: pd.DataFrame) -> pd.DataFrame:
     data = data.drop(columns="std_dev")
 
     data = data.groupby(list(data.drop(columns=["seed_nr", "accuracy",
-                                                "min_score","max_score",
+                                                "min_score", "max_score",
                                                 "accuracy_square", "std_dev_square"]).columns)).agg({
-        "accuracy": "mean",
-        "min_score": "min",
-        "max_score": "max",
-        "accuracy_square": "sum",
-        "std_dev_square": "sum"
-    }).reset_index()
+                                                    "accuracy": "mean",
+                                                    "min_score": "min",
+                                                    "max_score": "max",
+                                                    "accuracy_square": "sum",
+                                                    "std_dev_square": "sum"
+                                                }).reset_index()
 
     data["std_dev"] = get_std_dev(
         data["accuracy"], data["accuracy_square"], data["std_dev_square"])
@@ -68,7 +68,7 @@ def generate_plots(data: pd.DataFrame, dataset: str):
 
 
 if __name__ == "__main__":
-    reproductions = ["proportional", "rank_0.05",
+    reproductions = ["proportional", "rank_0.01",
                      "truncation_0.8", "tournament_2"]
     successions = ["generational", "elite_2"]
 
@@ -80,7 +80,6 @@ if __name__ == "__main__":
         "lol": "high_diamond_ranked_10min",
         "wine": "wine",
     }
-
 
     with open("./results/best_hyper.csv", "w") as file:
         pass

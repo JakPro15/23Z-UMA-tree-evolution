@@ -16,7 +16,7 @@ from multiprocessing import Process
 
 
 def run_experiment(name, data, counters, file_lengths):
-    for seed_nr in range(25):
+    for seed_nr in [0, 1, 3, 5, 6]:
         for max_depth in [5, 20]:
             for min_samples_split in [1, 2, 10]:
                 for prune in [True, False]:
@@ -40,6 +40,7 @@ def run_experiment(name, data, counters, file_lengths):
                                         f"{seed_nr},{max_depth},{min_samples_split},{prune},{gain_ratio},{min_entropy_decrease},"
                                         f"{repeating},{accuracy},{std_dev},{min_score},{max_score}\n")
 
+
 if __name__ == "__main__":
     datasets = prepare_datasets()
 
@@ -56,7 +57,8 @@ if __name__ == "__main__":
     processes = []
 
     for name, data in datasets.items():
-        process = Process(target=run_experiment, args=(name, data, counters, file_lengths))
+        process = Process(target=run_experiment, args=(
+            name, data, counters, file_lengths))
         processes.append(process)
         process.start()
 
