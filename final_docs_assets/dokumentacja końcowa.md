@@ -3,10 +3,7 @@ geometry: "left=1cm,right=1cm,top=1.5cm,bottom=1.5cm"
 ---
 
 \newcommand{\ctext}[3][RGB]{%
-  \begingroup
-  \definecolor{hlcolor}{#1}{#2}\sethlcolor{hlcolor}%
-  \hl{#3}%
-  \endgroup
+
 }
 
 # UMA Projekt – Ewolucja drzewa
