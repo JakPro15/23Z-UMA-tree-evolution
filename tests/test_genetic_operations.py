@@ -1,6 +1,7 @@
 # Authors: Paweł Kochański, Jakub Proboszcz
 # Written as a part of project in course UMA in semester 23Z
 
+import setup_path
 import genetic_operations
 from tree import LeafNode, InnerNode, DecisionTree, init_tree, Node
 import pandas as pd

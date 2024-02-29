@@ -1,6 +1,7 @@
 # Authors: Paweł Kochański, Jakub Proboszcz
 # Written as a part of project in course UMA in semester 23Z
 
+import setup_path
 from aggregate_results import get_std_dev
 import numpy as np
 from statistics import stdev, mean

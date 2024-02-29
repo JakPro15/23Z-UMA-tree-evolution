@@ -1,6 +1,7 @@
 # Authors: Paweł Kochański, Jakub Proboszcz
 # Written as a part of project in course UMA in semester 23Z
 
+import setup_path
 import succession
 from tree import DecisionTree, LeafNode
 
